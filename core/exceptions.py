@@ -1,0 +1,4 @@
+
+class AnimationEnded(Exception):
+    pass
+
