@@ -127,14 +127,12 @@ class Laser(StaticSprite):
             posy = self.ray_y
             height = self.owner.centery - self.ray_y
         initdata['centerx'] = posx + width/2
-        initdata['centery'] = posy + height/2  
-        print self.owner.centerx, self.owner.centery, self.ray_x, self.ray_y
-        self.ray_duration = 500 
+        initdata['centery'] = posy + height/2
+        self.ray_duration = 500
         self.costumes["default"] = pygame.Surface((width,height))
         self.costumes['default'].set_alpha(0)
         super(Laser, self).__init__(game_context, initdata=initdata, *group)
         self.full_screen = True
-        print self.centerx, self.centery, width, height
         self.costumes['default'].set_colorkey((0,0,0))
         self.animations["ray"] = Animation(game_context, self, "ray")
         widths = range(1,6) + range(6,0,-1)

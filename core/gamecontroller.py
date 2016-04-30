@@ -27,6 +27,7 @@ class GameController(object):
         self.resolution = game_context.resolution
         self.game_context = game_context
         self.sprite_groups = dict()
+        self.pause = False
 
     def load_graphics(self):
         self.spriteslib = SpritesLib(self.game_context)
@@ -82,6 +83,9 @@ class GameController(object):
 
         self.worldmap.add_room(starting_room, (0, 0))
 
+    def toggle_pause(self):
+        self.pause = not self.pause
+
     def init_controls(self, controls_config):
         self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_LEFT,  self.players["player_one"].main_sprite.rotate_left)
         self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_LEFT,  self.players["player_one"].main_sprite.stop_rotate_left)
@@ -91,6 +95,8 @@ class GameController(object):
         self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_UP,  self.players["player_one"].keyrelease_up)
         self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_SPACE,  self.players["player_one"].shoot)
         self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_SPACE,  self.players["player_one"].stop_shooting)
+
+        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_p, self.toggle_pause)
 
     def initgame(self):
         self.load_sounds()
@@ -143,6 +149,8 @@ class GameController(object):
             self.elements.add(player.sprites(), layer=2)
 
     def update(self):
+        if self.pause:
+            return False, None, self.elements
         self.elements.empty()
         if self.status == "start":
             self.initlevel("startlevel")
