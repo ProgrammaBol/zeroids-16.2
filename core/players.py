@@ -7,13 +7,13 @@ from sprites import MovingSprite
 
 class AlloyShip(MovingSprite):
 
-    def __init__(self, game_context, parent=None, initdata=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
         self.max_speed = 100
         self.costumes = dict()
         self.costumes_defs = dict()
         self.costumes_defs["default"] = ("main", (481, 403, 29, 29))
         self.costumes_defs["thrusting"] = ("main", (481, 358, 29, 29))
-        super(AlloyShip, self).__init__(game_context, initdata=initdata, *group)
+        super(AlloyShip, self).__init__(game_context, initdata=initdata, random_ranges=random_ranges, *group)
         self.collision_entity = "player"
         self.soundslib = game_context.sounds
         self.max_angular_speed = 180
@@ -48,10 +48,10 @@ class AlloyShip(MovingSprite):
 
 class Player(pygame.sprite.Group):
 
-    def __init__(self, main_sprite_class, game_context, initdata=None):
+    def __init__(self, main_sprite_class, game_context, initdata={}, random_ranges=None):
         super(Player, self).__init__()
         self.spriteslib = game_context.sprites
-        self.main_sprite = self.spriteslib.get_sprite(main_sprite_class, game_context, initdata=initdata)
+        self.main_sprite = self.spriteslib.get_sprite(main_sprite_class, game_context, initdata=initdata, random_ranges=random_ranges)
         self.add(self.main_sprite)
         self.weapons = dict()
         self.weapons["gun"] = Gun()

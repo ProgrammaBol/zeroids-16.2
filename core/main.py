@@ -24,7 +24,6 @@ def main():
                     }
     game_context = GameContext(context_data)
     game_controller = GameController(main_event_queue, game_context)
-    game_controller.initgame()
     loop = True
     clock.tick(max_fps)
     clock.tick(max_fps)

@@ -1,12 +1,8 @@
 import pygame
-import os
 import pprint
 from maps import RoomMap, WorldMap
 from asteroids import Asteroid
-from sprites import SpritesLib
 from players import Player, AlloyShip
-from sounds import SoundsLib
-from texts import TextLib
 from ufo import Ufo
 from turret import Turret
 # levels (roomid)
@@ -19,8 +15,8 @@ class GameController(object):
 
     def __init__(self, event_queue, game_context):
         self.players = dict()
-        self.status = "start"
-        self.worldmap = WorldMap((3, 3))
+        self.status = "menu-init"
+        self.worldmap = WorldMap((1, 4))
         self.elements = pygame.sprite.LayeredUpdates()
         self.event_queue = event_queue
         self.clock = game_context.clock
@@ -28,60 +24,74 @@ class GameController(object):
         self.game_context = game_context
         self.sprite_groups = dict()
         self.pause = False
+        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_p, self.toggle_pause)
+        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_n, self.next_level)
+        self.currentstatus_elements = dict()
 
-    def load_graphics(self):
-        self.spriteslib = SpritesLib(self.game_context)
-        self.spriteslib.add_sheet("main", os.path.normpath("assets/spritelib_gpl/shooter/disasteroids2_master.png"), (0, 0, 0))
-        self.spriteslib.add_sheet("explode3", os.path.normpath("assets/spritesheets/Explode3.bmp"), (69, 78, 91))
-        self.game_context.add("sprites", self.spriteslib)
+    def next_level(self):
+        self.status = "level-init"
 
-    def load_sounds(self):
-        self.soundslib = SoundsLib()
-        self.soundslib.add_sound("alloyshipthrust", os.path.normpath("assets/sounds/alloyshipthrust.wav"))
-        self.soundslib.add_sound("gunshot", os.path.normpath("assets/sounds/gunshot.wav"))
-        self.soundslib.add_sound("gunblast", os.path.normpath("assets/sounds/gunblast.wav"))
-        self.game_context.add("sounds", self.soundslib)
-
-    def load_music(self):
-        pass
-
-    def load_fonts(self):
-        self.textlib = TextLib(self.spriteslib)
-        self.game_context.add("text", self.textlib)
-
-    def load_maps(self):
-        # load map file
-        ranges = {}
-        ranges['interval_min'] = 10
-        ranges['interval_max'] = 10
-        ranges['count_min'] = 3
-        ranges['count_max'] = 5
-        ranges['direction_min'] = 0
-        ranges['direction_max'] = 360
-        ranges['speed_min'] = 30
-        ranges['speed_max'] = 70
-        ranges['position_type'] = "offmap"
-        starting_room = RoomMap(self.game_context, "start", (32, 32), (30, 30), None)
+    def load_map(self, levelid):
+        # load map file(levelid)
+        if levelid == (0,0):
+            map_def = {
+                'name' : 'Level 1',
+                'size' : (32, 32),
+                'tilesize' : (30,30),
+                'tilemap' : None,
+                'player_pos' : (600,400),
+                'random_ranges' : {
+                    'interval_min' : 10,
+                    'interval_max' : 10,
+                    'count_min' : 3,
+                    'count_max' : 5,
+                    'direction_min' : 0,
+                    'direction_max' : 360,
+                    'speed_min' : 30,
+                    'speed_max' : 70,
+                    'position_type' : "offmap",
+                },
+                'mobs': [],
+                'spawns': []
+            }
+        if levelid == (0,1):
+            map_def = {
+                'name' : 'Level 2',
+                'size' : (32, 32),
+                'tilesize' : (30,30),
+                'tilemap' : None,
+                'player_pos' : (600,400),
+                'random_ranges' : {
+                    'interval_min' : 10,
+                    'interval_max' : 10,
+                    'count_min' : 3,
+                    'count_max' : 5,
+                    'direction_min' : 0,
+                    'direction_max' : 360,
+                    'speed_min' : 30,
+                    'speed_max' : 70,
+                    'position_type' : "offmap",
+                },
+                'mobs': [
+                    ('Asteroid', None)
+                ],
+                'spawns': []
+            }
+        room = RoomMap(self.game_context, map_def)
 
         # Mobs
-        #initdata = starting_room.generate_random_init(ranges)
-        # asteroids
-        initdata = starting_room.generate_random_init(ranges)
-        starting_room.add_mob(Asteroid, initdata)
-        starting_room.add_spawns(Asteroid, ranges=ranges)
+        #room.add_spawns(Asteroid, randome_ranges=random_ranges)
         # ufo
-        initdata = starting_room.generate_random_init(ranges)
-        initdata['targets'] = [self.players["player_one"].main_sprite]
-        starting_room.add_mob(Ufo, initdata=initdata)
+        #initdata = {}
+        #initdata['targets'] = [self.players["player_one"].main_sprite]
+        #room.add_mob(Ufo, initdata=initdata, random_ranges=random_ranges)
         # staring_room.loadtiles()
         # turret
-        initdata = starting_room.generate_random_init(ranges)
-        ranges['position_type'] = "inmap"
-        initdata['targets'] = [self.players["player_one"].main_sprite]
-        starting_room.add_mob(Turret, initdata)
+        #random_ranges['position_type'] = "inmap"
+        #initdata['targets'] = [self.players["player_one"].main_sprite]
+        #room.add_mob(Turret, initdata=initdata, random_ranges=random_ranges)
 
-
-        self.worldmap.add_room(starting_room, (0, 0))
+        self.worldmap.add_room(room, levelid)
 
     def toggle_pause(self):
         self.pause = not self.pause
@@ -96,24 +106,6 @@ class GameController(object):
         self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_SPACE,  self.players["player_one"].shoot)
         self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_SPACE,  self.players["player_one"].stop_shooting)
 
-        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_p, self.toggle_pause)
-
-    def initgame(self):
-        self.load_sounds()
-        self.load_graphics()
-        self.load_music()
-        self.load_fonts()
-        initdata = {}
-        initdata['centerx'] = 600
-        initdata['centery'] = 400
-        self.players["player_one"] = Player(AlloyShip, self.game_context, initdata=initdata)
-        self.load_maps()
-        self.init_controls(None)
-
-    def initlevel(self, levelid):
-        self.elements.empty()
-        self.worldmap.set_current_room((0, 0))
-
     def initcutscene(self, cutsceneid):
         pass
 
@@ -125,12 +117,12 @@ class GameController(object):
                 sprite.active_collisions.empty()
                 collided = pygame.sprite.spritecollide(sprite, self.elements, False, collided=pygame.sprite.collide_rect)
                 for collided_sprite in collided:
-                    if not collided_sprite.full_screen:
+                    if not collided_sprite.full_screen and not collided_sprite.immutable:
                         point = pygame.sprite.collide_mask(sprite, collided_sprite)
                         if point:
                             sprite.active_collisions.add(collided_sprite)
                             sprite.collision_points[collided_sprite] = point
-                    else:
+                    elif collided_sprite.full_screen:
                         y = collided_sprite.m * sprite.rect.x + collided_sprite.q
                         if y > sprite.rect.y and y < sprite.rect.y + sprite.rect.height:
                                 point = pygame.sprite.collide_mask(sprite, collided_sprite)
@@ -139,28 +131,99 @@ class GameController(object):
                                     sprite.collision_points[collided_sprite] = point
                 self.elements.add(sprite)
 
-    def update_level(self):
-        self.worldmap.get_current_room().update()
-        room_elements = self.worldmap.get_current_room().elements
+    def change_status(self, status):
+        self.status = status
+
+    def gameover(self):
+        self.status = "menu-init"
+
+    def menu_shutdown(self):
+        self.event_queue.unsubscribe("keyboard", pygame.KEYUP, pygame.K_SPACE)
+        self.currentstatus_elements['startbutton'].destroyed = True
+
+    def menu_startgame(self):
+        self.menu_shutdown()
+        self.status = "level-init"
+
+    def menu_init(self):
+        self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_SPACE, self.menu_startgame)
+        text = "Press space to start"
+        self.currentstatus_elements['startbutton'] = self.game_context.text.get_textsprite(text, style="title")
+
+    def menu_update(self):
+        self.elements.add(self.currentstatus_elements['startbutton'])
+
+    def intralevel_init(self, room):
+        text = room.name
+        self.currentstatus_elements['levelname'] = self.game_context.text.get_textsprite(text, style="title")
+        self.status = "intralevel"
+        self.countdown = 2000
+
+    def intralevel_update(self, room):
+        self.countdown = self.countdown - self.clock.get_time()
+        if self.countdown <= 0:
+            self.status = "level"
+            self.currentstatus_elements['levelname'].destroyed = True
+        else:
+            self.elements.add(self.currentstatus_elements['levelname'])
+
+
+    def level_init(self, levelid=(0,0)):
+        self.load_map(levelid)
+        player_initdata = self.worldmap.set_current_room(levelid)
+        self.players["player_one"] = Player(AlloyShip, self.game_context, initdata=player_initdata)
+        self.init_controls(None)
+
+    def level_update(self, room):
+        room_elements, mobs = room.update()
         self.elements.add(room_elements.sprites(), layer=1)
         self.elements.remove_sprites_of_layer(3)
-        player_one = self.players["player_one"].main_sprite
+        for mob in mobs:
+            self.elements.add(mob.sprites())
         for player in self.players.values():
             self.elements.add(player.sprites(), layer=2)
+        self.collisions()
+
+        # player on health = 0
+        # self.status = game over
+        # if level_completed
+        # self.status = "leve_init"
 
     def update(self):
         if self.pause:
             return False, None, self.elements
         self.elements.empty()
-        if self.status == "start":
-            self.initlevel("startlevel")
-            self.status = "level"
+        # Statuses
+        if self.status == "game-over":
+            self.gameover()
+        if self.status == "menu-init":
+            self.menu_init()
+            self.status = "menu"
+        if self.status == "menu":
+            self.menu_update()
+        if self.status == "level-init":
+            levelid = self.worldmap.get_current_room_id()
+            if levelid is None:
+                next_levelid = (0,0)
+            else:
+                next_levelid = (0, levelid[1] + 1)
+            self.level_init(next_levelid)
+            self.status = "intralevel-init"
+        if self.status == "intralevel-init":
+            room = self.worldmap.get_current_room()
+            self.intralevel_init(room)
+        if self.status == "intralevel":
+            room = self.worldmap.get_current_room()
+            self.intralevel_update(room)
         if self.status == "level":
-            self.update_level()
-        self.collisions()
+            room = self.worldmap.get_current_room()
+            self.level_update(room)
+
         for sprite in self.elements.sprites():
             if getattr(sprite, "destroyed", False):
                 sprite.kill()
                 del (sprite)
+
         self.elements.update()
+
         return False, None, self.elements

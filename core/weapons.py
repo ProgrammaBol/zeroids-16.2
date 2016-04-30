@@ -7,7 +7,7 @@ from exceptions import AnimationEnded
 
 class Bullet(MovingSprite):
 
-    def __init__(self, game_context, parent=None, initdata=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
         self.costumes = dict()
         self.costumes_defs = dict()
         self.animations = {}
@@ -68,7 +68,7 @@ class Gun(object):
 
 class Laser(StaticSprite):
 
-    def __init__(self, game_context, parent=None, initdata={}, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
         self.costumes = dict()
         self.owner = None
         self.owner_class = None

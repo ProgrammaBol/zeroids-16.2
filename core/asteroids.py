@@ -6,7 +6,7 @@ from animations import Animation
 
 class AsteroidFragment(MovingSprite):
 
-    def __init__(self, game_context, parent=None, initdata=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
         self.costumes = dict()
         self.costumes_defs = dict()
         self.size = initdata["size"]
@@ -29,14 +29,10 @@ class AsteroidFragment(MovingSprite):
             ("explode3", (145, 49, 47, 47)),
         ]
         self.animations["explode"].add_sequence(explode_seq, 1000, equal_time=True, defs=True)
-        super(AsteroidFragment, self).__init__(game_context, *group)
+        super(AsteroidFragment, self).__init__(game_context, initdata=initdata, random_ranges=random_ranges,*group)
         self.deceleration = False
         self.collision_entity = "mob"
         self.angular_speed = 35
-        self.start_speed = initdata["speed"]
-        self.centerx = initdata["centerx"]
-        self.centery = initdata["centery"]
-        self.direction = initdata["direction"]
         self.parent = parent
 
     def explode(self):
@@ -67,16 +63,17 @@ class AsteroidFragment(MovingSprite):
 
 class Asteroid(pygame.sprite.Group):
 
-    def __init__(self, game_context, initdata=None, *group):
+    def __init__(self, game_context, initdata={}, random_ranges=None, *group):
         super(Asteroid, self).__init__()
         self.spriteslib = game_context.sprites
         initdata["size"] = 3
 
         self.game_context = game_context
-        self.main_sprite = self.spriteslib.get_sprite(AsteroidFragment, game_context, parent=self, initdata=initdata)
+        self.main_sprite = self.spriteslib.get_sprite(AsteroidFragment, game_context, parent=self, initdata=initdata, random_ranges=random_ranges)
         self.add(self.main_sprite)
         self.soundslib = game_context.sounds
         self.children = 1
+        self.random_ranges = random_ranges
         #fragment = AsteroidFragment(clock, soundslib, self, size, *group)
         #self.fragments.append(fragment)
 
@@ -89,7 +86,7 @@ class Asteroid(pygame.sprite.Group):
             initdata['direction'] = child.direction + direction
             initdata['centerx'] = child.centerx
             initdata['centery'] = child.centery
-            initdata['speed'] = child.speed
+            initdata['start_speed'] = child.speed
             fragment = self.spriteslib.get_sprite(AsteroidFragment, self.game_context, parent=self, initdata=initdata)
             self.add(fragment)
             self.children += 1

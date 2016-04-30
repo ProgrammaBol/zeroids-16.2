@@ -1,5 +1,6 @@
 import pygame
 import math
+import random
 
 class SpritesLib(object):
 
@@ -27,8 +28,8 @@ class SpritesLib(object):
         spriteimage = spritesheet.subsurface(rect).copy()
         return spriteimage
 
-    def get_sprite(self, sprite_class, game_context, parent=None, initdata=None):
-        sprite = sprite_class(game_context, parent=parent, initdata=initdata)
+    def get_sprite(self, sprite_class, game_context, parent=None, initdata={}, random_ranges=None):
+        sprite = sprite_class(game_context, parent=parent, initdata=initdata, random_ranges=random_ranges)
         if hasattr(sprite, "costumes_defs"):
             for costume_name, costume_definition in sprite.costumes_defs.items():
                 costume_position = costume_definition
@@ -41,8 +42,11 @@ class SpritesLib(object):
 
 class StaticSprite(pygame.sprite.Sprite):
 
-    def __init__(self, game_context, initdata={}, *group):
+    def __init__(self, game_context, initdata={}, random_ranges=None, *group):
         super(StaticSprite, self).__init__(*group)
+        self.game_context = game_context
+        if random_ranges:
+            initdata = self.generate_random_init(random_ranges)
         self.centerx = 0.0
         self.centerx = initdata.get('centerx', 0.0)
         self.centery = initdata.get('centery', 0.0)
@@ -57,6 +61,30 @@ class StaticSprite(pygame.sprite.Sprite):
         self.immutable = initdata.get("immutable", False)
         self.destroyed = False
         self.clock = game_context.clock
+
+    def generate_random_init(self, ranges):
+        centerx_min = ranges.get('centerx_min', 0)
+        centerx_max = ranges.get('centerx_max', self.game_context.resolution[0])
+        centery_min = ranges.get('centery_min', 0)
+        centery_max = ranges.get('centery_max', self.game_context.resolution[1])
+        position_allowed_borders = ranges.get('position_allowed_borders', ["top", "bottom", "left", "right"])
+        position_type = ranges['position_type']
+        centerx = random.randint(centerx_min, centerx_max)
+        centery = random.randint(centery_min, centery_max)
+        if position_type == "offmap":
+            border = random.choice(position_allowed_borders)
+            if border == "top":
+                centery = 0
+            elif border == "bottom":
+                centery = self.resolution[1]
+            elif border == "left":
+                centerx = 0
+            elif border == "right":
+                centery = self.resolution[0]
+        init = {}
+        init['centerx'] = centerx
+        init['centery'] = centery
+        return init
 
     def change_active_costume(self, costume_name):
         self.image = self.costumes[costume_name]
@@ -89,13 +117,14 @@ class StaticSprite(pygame.sprite.Sprite):
 
 class MovingSprite(StaticSprite):
 
-    def __init__(self, game_context, initdata={}, *group):
-        super(MovingSprite, self).__init__(game_context, initdata=initdata, *group)
-        if not hasattr(self, "max_speed"):
-            self.max_speed = 0
-        if not hasattr(self, "start_speed"):
-            self.start_speed = 0
-        self.direction = 0
+    def __init__(self, game_context, initdata={}, random_ranges=None, *group):
+        super(MovingSprite, self).__init__(game_context, initdata=initdata, random_ranges=random_ranges, *group)
+        if random_ranges:
+            initdata = self.generate_random_init(random_ranges)
+        getattr(self, "max_speed", 0)
+        getattr(self, "start_speed", 0)
+        self.start_speed = initdata.get('start_speed', 0)
+        self.direction = initdata.get('direction', 0)
         # speeds are in unit/sec
         self.angular_speed = 0
         self.speed_x = 0.0
@@ -111,6 +140,19 @@ class MovingSprite(StaticSprite):
         self.ai_scheme = None
         self.resolutionx, self.resolutiony = game_context.resolution
         self.angle_is_direction = False
+
+    def generate_random_init(self, ranges):
+        speed_min = ranges['speed_min']
+        speed_max = ranges['speed_max']
+        direction_min = ranges['direction_min']
+        direction_max = ranges['direction_max']
+        direction = random.randint(direction_min, direction_max)
+        speed = random.randint(speed_min, speed_max)
+        init = {}
+        init['start_speed'] = speed
+        init['direction'] = direction
+        return init
+
 
     def spin(self):
         frame_msec = self.clock.get_time()

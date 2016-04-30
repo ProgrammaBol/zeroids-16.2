@@ -1,6 +1,7 @@
 import pygame
 import random
 from sprites import StaticSprite
+from asteroids import Asteroid
 
 class TileSet(dict):
 
@@ -35,18 +36,32 @@ class Background(object):
 
 class RoomMap(object):
 
-    def __init__(self, game_context, name, size, tilesize, tilemap):
-        self.roomid = name
+    def __init__(self, game_context, map_def):
+        self.name = map_def['name']
         self.elements = pygame.sprite.Group()
+        size = map_def['size']
         self.tiles = list([None for r in range(size[1])] for c in range(size[0]))
         self.background = Background((0, 0, 0))
-        self.tilesize = tilesize
-        self.tilemap = tilemap
+        self.tilesize = map_def['tilesize']
+        self.tilemap = map_def['tilemap']
         self.mobs = []
         self.spawns = {}
         self.clock = game_context.clock
         self.resolution = game_context.resolution
         self.game_context = game_context
+        self.player_pos = map_def['player_pos']
+        self.random_ranges = map_def['random_ranges']
+        for mob in map_def['mobs']:
+            try:
+                mob_class = globals()[mob[0]]
+            except KeyError:
+                continue
+            if mob[1] is None:
+                self.add_mob(mob_class, random_ranges=self.random_ranges)
+            else:
+                self.add_mob(mob_class, initdata=mob[1])
+
+
 
     def load_map_def(self, map_def):
         pass
@@ -54,47 +69,9 @@ class RoomMap(object):
     def generate_random_init(self, ranges):
         interval_min = ranges['interval_min']
         interval_max = ranges['interval_max']
-        centerx_min = 0
-        if 'centerx_min' in ranges:
-            centerx_min = ranges['centerx_min']
-        centerx_max = self.resolution[0]
-        if 'centerx_max' in ranges:
-            centerx_max = ranges['centerx_max']
-        centery_min = 0
-        if 'centery_min' in ranges:
-            centery_min = ranges['centery_min']
-        centery_max = self.resolution[1]
-        if 'centery_max' in ranges:
-            centery_max = ranges['centery_max']
-        position_allowed_borders = ["top", "bottom", "left", "right"]
-        if 'position_allowed_borders' in ranges:
-            position_allowed_borders = ranges["position_allowed_borders"]
-        position_type = ranges['position_type']
-        speed_min = ranges['speed_min']
-        speed_max = ranges['speed_max']
-        direction_min = ranges['direction_min']
-        direction_max = ranges['direction_max']
         interval = random.randint(interval_min, interval_max)
-        centerx = random.randint(centerx_min, centerx_max)
-        centery = random.randint(centery_min, centery_max)
-        if position_type == "offmap":
-            border = random.choice(position_allowed_borders)
-            if border == "top":
-                centery = 0
-            elif border == "bottom":
-                centery = self.resolution[1]
-            elif border == "left":
-                centerx = 0
-            elif border == "right":
-                centery = self.resolution[0]
-        direction = random.randint(direction_min, direction_max)
-        speed = random.randint(speed_min, speed_max)
         init = {}
         init["interval"]= interval
-        init['centerx'] = centerx
-        init['centery'] = centery
-        init['speed'] = speed
-        init['direction'] = direction
         return init
 
     def set_tile(self, tileid, position):
@@ -115,8 +92,8 @@ class RoomMap(object):
         self.background.color = color
         self.background.image = image
 
-    def add_mob(self, mob_class, initdata):
-        mob = mob_class(self.game_context, initdata=initdata)
+    def add_mob(self, mob_class, initdata={}, random_ranges=None):
+        mob = mob_class(self.game_context, initdata=initdata, random_ranges=random_ranges)
         #sprite = mob.main_sprite
         #sprite.centerx = position[0] * self.tilesize[0] + self.tilesize[0]/2
         #sprite.centery = position[1] * self.tilesize[1] + self.tilesize[1]/2
@@ -124,17 +101,17 @@ class RoomMap(object):
         self.mobs.append(mob)
         return mob
 
-    def add_spawns(self, mob_class, inits=None, ranges=None, multiple=True):
+    def add_spawns(self, mob_class, inits=None, random_ranges=None, multiple=True):
         ''' if mutiple=False a new spawn will not be created if the first
         is still present '''
-        if inits is None and ranges is None:
+        if inits is None and random_ranges is None:
             raise Exception
 
         self.spawns[mob_class.__name__] = {}
         if inits is None:
             inits = []
-            count_min = ranges['count_min']
-            count_max = ranges['count_max']
+            count_min = random_ranges['count_min']
+            count_max = random_ranges['count_max']
             count = random.randint(count_min, count_max)
             for spawn in range(count):
                 init = self.generate_random_init(ranges)
@@ -153,13 +130,11 @@ class RoomMap(object):
                 infos['next_countdown'] -= time
                 if infos['next_countdown'] < 0:
                     initdata = infos['inits'].pop(0)
-                    mob = self.add_mob(infos['class'], initdata=initdata)
+                    mob = self.add_mob(infos['class'], initdata=initdata, random_ranges=None)
                     infos['last'] = mob
                     if infos['inits']:
                         infos['next_countdown'] = float(infos['inits'][0]['interval'])
-        self.elements.empty()
-        for mob in self.mobs:
-            self.elements.add(mob.sprites())
+        return self.elements, self.mobs
 
 class WorldMap(object):
 
@@ -177,16 +152,28 @@ class WorldMap(object):
         east = None
         west = None
         if position[1] != 0:
-            north = self.rooms[position[0] - 1][position[1]]
+            north = self.rooms[position[0]][position[1] + 1]
         if position[1] != self.size[1] - 1:
-            south = self.rooms[position[0] + 1][position[1]]
+            south = self.rooms[position[0]][position[1] - 1]
         if position[0] != 0:
-            east = self.rooms[position[0]][position[1] - 1]
+            east = self.rooms[position[0] + 1][position[1]]
         if position[0] != self.size[0] - 1:
-            west = self.rooms[position[0]][position[1] + 1]
+            west = self.rooms[position[0] - 1][position[1]]
 
         self.current_exits = (north, south, east, west)
         self.current_room = position
+        room = self.rooms[self.current_room[0]][self.current_room[1]]
+
+        player_initdata = dict()
+        player_initdata['centerx'] = room.player_pos[0]
+        player_initdata['centery'] = room.player_pos[1]
+
+        return player_initdata
 
     def get_current_room(self):
         return self.rooms[self.current_room[0]][self.current_room[1]]
+
+    def get_current_room_id(self):
+        if self.current_room is None:
+            return None
+        return (self.current_room[0],self.current_room[1])
