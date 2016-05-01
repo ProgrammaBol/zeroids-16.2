@@ -6,7 +6,7 @@ from weapons import LaserGun
 
 class LaserTurret(MovingSprite):
 
-    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges={}, *group):
         self.costumes = dict()
         self.costumes_defs = dict()
         self.costumes_defs["default"] = ("main", (26, 292, 29, 29))
@@ -24,8 +24,6 @@ class LaserTurret(MovingSprite):
         self.angle_is_direction = True
 
     def explode(self):
-        self.speed_x = 0
-        self.speed_y = 0
         self.status = "exploding"
 
     def handle_collision(self, sprite):
@@ -65,7 +63,7 @@ class LaserTurret(MovingSprite):
 
 class Turret(pygame.sprite.Group):
 
-    def __init__(self, game_context, initdata={}, random_ranges=None, *group):
+    def __init__(self, game_context, initdata={}, random_ranges={}, *group):
         super(Turret, self).__init__()
         self.spriteslib = game_context.sprites
         self.main_sprite = self.spriteslib.get_sprite(LaserTurret, game_context, initdata=initdata, random_ranges=random_ranges, parent=self)
@@ -78,7 +76,6 @@ class Turret(pygame.sprite.Group):
         self.targets = initdata['targets']
 
     def shoot(self):
-        print self.main_sprite
         initdata = {}
         initdata['target'] = (self.targets[0].centerx, self.targets[0].centery)
         ammo_sprite = self.spriteslib.get_sprite(self.current_weapon.ammo_class, self.game_context, parent=self.main_sprite, initdata=initdata)

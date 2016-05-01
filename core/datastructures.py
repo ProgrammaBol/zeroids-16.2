@@ -21,7 +21,8 @@ class GameContext(object):
 
     def load_graphics(self):
         self.spriteslib = SpritesLib(self)
-        self.spriteslib.add_sheet("main", os.path.normpath("assets/spritelib_gpl/shooter/disasteroids2_master.png"), (0, 0, 0))
+        self.spriteslib.add_sheet("main", os.path.normpath("assets/spritesheets/master.png"), (0, 0, 0))
+        self.spriteslib.add_sheet("extended", os.path.normpath("assets/spritesheets/extended.png"), (171, 166, 166))
         self.spriteslib.add_sheet("explode3", os.path.normpath("assets/spritesheets/Explode3.bmp"), (69, 78, 91))
         self.spriteslib.add_sheet("explode2", os.path.normpath("assets/spritesheets/Explode1.bmp"), (0, 0, 0))
         self.spriteslib.add_sheet("explode1", os.path.normpath("assets/spritesheets/Explode2.bmp"), (0, 0, 0))
@@ -32,10 +33,11 @@ class GameContext(object):
         self.soundslib.add_sound("alloyshipthrust", os.path.normpath("assets/sounds/alloyshipthrust.wav"))
         self.soundslib.add_sound("gunshot", os.path.normpath("assets/sounds/gunshot.wav"))
         self.soundslib.add_sound("gunblast", os.path.normpath("assets/sounds/gunblast.wav"))
+        self.soundslib.add_sound("explosion", os.path.normpath("assets/sounds/explosion.wav"))
         self.add("sounds", self.soundslib)
 
     def load_music(self):
-        pass
+        self.soundslib.add_music("intro", os.path.normpath("assets/music/intro.wav"))
 
     def load_animations(self):
         self.animations = Animations(self)

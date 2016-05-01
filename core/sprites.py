@@ -28,7 +28,7 @@ class SpritesLib(object):
         spriteimage = spritesheet.subsurface(rect).copy()
         return spriteimage
 
-    def get_sprite(self, sprite_class, game_context, parent=None, initdata={}, random_ranges=None):
+    def get_sprite(self, sprite_class, game_context, parent=None, initdata={}, random_ranges={}):
         sprite = sprite_class(game_context, parent=parent, initdata=initdata, random_ranges=random_ranges)
         if hasattr(sprite, "costumes_defs"):
             for costume_name, costume_definition in sprite.costumes_defs.items():
@@ -42,14 +42,12 @@ class SpritesLib(object):
 
 class StaticSprite(pygame.sprite.Sprite):
 
-    def __init__(self, game_context, initdata={}, random_ranges=None, *group):
+    def __init__(self, game_context, initdata={}, random_ranges={}, *group):
         super(StaticSprite, self).__init__(*group)
         self.game_context = game_context
-        if random_ranges:
-            initdata = self.generate_random_init(random_ranges)
-        self.centerx = 0.0
-        self.centerx = initdata.get('centerx', 0.0)
-        self.centery = initdata.get('centery', 0.0)
+        self.random_position(random_ranges)
+        self.centerx = initdata.get('centerx', self.centerx)
+        self.centery = initdata.get('centery', self.centery)
         self.visible = False
         self.masks = dict()
         self.active_costume_name = "default"
@@ -62,29 +60,41 @@ class StaticSprite(pygame.sprite.Sprite):
         self.destroyed = False
         self.clock = game_context.clock
 
-    def generate_random_init(self, ranges):
-        centerx_min = ranges.get('centerx_min', 0)
-        centerx_max = ranges.get('centerx_max', self.game_context.resolution[0])
-        centery_min = ranges.get('centery_min', 0)
-        centery_max = ranges.get('centery_max', self.game_context.resolution[1])
+    def random_position(self, ranges):
+        centerx = 0
+        centery = 0
+        centerx_min = ranges.get('centerx_min', None)
+        if centerx_min is not None:
+            centerx_max = ranges.get('centerx_max', self.game_context.resolution[0])
+        else:
+            centerx_max = None
+        centery_min = ranges.get('centery_min', None)
+        if centery_min is not None:
+            centery_max = ranges.get('centery_max', self.game_context.resolution[1])
+        else:
+            centery_max = None
         position_allowed_borders = ranges.get('position_allowed_borders', ["top", "bottom", "left", "right"])
-        position_type = ranges['position_type']
-        centerx = random.randint(centerx_min, centerx_max)
-        centery = random.randint(centery_min, centery_max)
+        position_type = ranges.get('position_type', 'inmap')
+        if centerx_min is not None and centerx_max is not None:
+            centerx = random.randint(centerx_min, centerx_max)
+        if centery_min is not None and centery_max is not None:
+            centery = random.randint(centery_min, centery_max)
         if position_type == "offmap":
             border = random.choice(position_allowed_borders)
             if border == "top":
+                centerx = random.randint(0,  self.game_context.resolution[0])
                 centery = 0
             elif border == "bottom":
-                centery = self.resolution[1]
+                centerx = random.randint(0,  self.game_context.resolution[0])
+                centery = self.game_context.resolution[1]
             elif border == "left":
                 centerx = 0
+                centery = random.randint(0,  self.game_context.resolution[1])
             elif border == "right":
-                centery = self.resolution[0]
-        init = {}
-        init['centerx'] = centerx
-        init['centery'] = centery
-        return init
+                centerx = self.game_context.resolution[0]
+                centery = random.randint(0,  self.game_context.resolution[0])
+        self.centerx = centerx
+        self.centery = centery
 
     def change_active_costume(self, costume_name):
         self.image = self.costumes[costume_name]
@@ -117,14 +127,11 @@ class StaticSprite(pygame.sprite.Sprite):
 
 class MovingSprite(StaticSprite):
 
-    def __init__(self, game_context, initdata={}, random_ranges=None, *group):
+    def __init__(self, game_context, initdata={}, random_ranges={}, *group):
         super(MovingSprite, self).__init__(game_context, initdata=initdata, random_ranges=random_ranges, *group)
-        if random_ranges:
-            initdata.update(self.generate_random_init(random_ranges))
-        getattr(self, "max_speed", 0)
-        getattr(self, "start_speed", 0)
-        self.start_speed = initdata.get('start_speed', 0)
-        self.direction = initdata.get('direction', 0)
+        self.random_movement(random_ranges)
+        self.start_speed = initdata.get('start_speed', self.start_speed)
+        self.direction = initdata.get('direction', self.direction)
         # speeds are in unit/sec
         self.angular_speed = 0
         self.speed_x = 0.0
@@ -141,17 +148,19 @@ class MovingSprite(StaticSprite):
         self.resolutionx, self.resolutiony = game_context.resolution
         self.angle_is_direction = False
 
-    def generate_random_init(self, ranges):
-        speed_min = ranges.get('speed_min', 0)
-        speed_max = ranges.get('speed_max', 0)
-        direction_min = ranges.get('direction_min', 0)
-        direction_max = ranges.get('direction_max', 0)
-        direction = random.randint(direction_min, direction_max)
-        speed = random.randint(speed_min, speed_max)
-        init = {}
-        init['start_speed'] = speed
-        init['direction'] = direction
-        return init
+    def random_movement(self, ranges):
+        speed_min = ranges.get('speed_min', None)
+        speed_max = ranges.get('speed_max', None)
+        direction_min = ranges.get('direction_min', None)
+        direction_max = ranges.get('direction_max', None)
+        if speed_min is None or speed_max is None:
+            self.start_speed = 0
+        else:
+            self.start_speed = random.randint(speed_min, speed_max)
+        if direction_min is None or direction_max is None:
+            self.direction = 0
+        else:
+            self.direction = random.randint(direction_min, direction_max)
 
 
     def spin(self):

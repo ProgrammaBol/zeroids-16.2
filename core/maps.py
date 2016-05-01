@@ -8,71 +8,119 @@ from players import Player, AlloyShip
 
 levels = {
     (0,0): {
-            'name' : 'Level 1',
-            'size' : (32, 32),
-            'tilesize' : (30,30),
-            'tilemap' : None,
-            'player_pos' : (600,400),
+        'name' : 'Level 1',
+        'size' : (32, 32),
+        'tilesize' : (30,30),
+        'tilemap' : None,
+        'player_pos' : (600,400),
     },
     (0,1): {
-            'name' : 'Level 2',
-            'size' : (32, 32),
-            'tilesize' : (30,30),
-            'tilemap' : None,
-            'player_pos' : (600,400),
-            'spawns': [
-                {
-                    "Asteroid": {
-                        'random_ranges' : {
-                            'direction_min' : 0,
-                            'direction_max' : 360,
-                            'speed_min' : 30,
-                            'speed_max' : 70,
-                            'position_type' : "offmap",
-                        }
+        'name' : 'Level 2',
+        'size' : (32, 32),
+        'tilesize' : (30,30),
+        'tilemap' : None,
+        'player_pos' : (600,400),
+        'spawns': [
+            {
+                "Asteroid": {
+                    'random_ranges' : {
+                        'direction_min' : 0,
+                        'direction_max' : 360,
+                        'speed_min' : 30,
+                        'speed_max' : 70,
+                        'position_type' : "offmap",
                     }
-                },
-            ]
+                }
+            },
+        ]
     },
     (0,2): {
-            'name' : 'Level 4',
-            'size' : (32, 32),
-            'tilesize' : (30,30),
-            'tilemap' : None,
-            'player_pos' : (600,400),
-            'spawns': [
-                {
-                    "Turret": {
-                        'random_ranges' : {
-                            'position_type' : "inmap",
-                        }
+        'name' : 'Level 3',
+        'size' : (32, 32),
+        'tilesize' : (30,30),
+        'tilemap' : None,
+        'player_pos' : (600,400),
+        'spawns': [
+            {
+                "Ufo": {
+                    'random_ranges' : {
+                        'direction_min' : 0,
+                        'direction_max' : 360,
+                        'speed_min' : 30,
+                        'speed_max' : 70,
+                        'position_type' : "offmap",
                     }
-                },
-            ]
+                }
+            },
+        ]
     },
     (0,3): {
-            'name' : 'Level 5',
-            'size' : (32, 32),
-            'tilesize' : (30,30),
-            'tilemap' : None,
-            'player_pos' : (600,400),
-            'spawns': [
-                {
-                    "Asteroid": {
-                        'random_ranges' : {
-                            'interval_min' : 10,
-                            'interval_max' : 10,
-                            'count_min' : 3,
-                            'count_max' : 5,
-                            'direction_min' : 0,
-                            'direction_max' : 360,
-                            'speed_min' : 30,
-                            'speed_max' : 70,
-                            'position_type' : "offmap",
-                        }
+        'name' : 'Level 4',
+        'size' : (32, 32),
+        'tilesize' : (30,30),
+        'tilemap' : None,
+        'player_pos' : (600,400),
+        'spawns': [
+            {
+                "Turret": {
+                    'random_ranges' : {
+                        'centerx_min': 0,
+                        'centery_min': 700
+                    }
+                }
+            },
+        ]
+    },
+    (0,4): {
+        'name': 'Level 5',
+        'size': (32, 32),
+        'tilesize': (30, 30),
+        'tilemap': None,
+        'player_pos': (600, 400),
+        'spawns': [
+            {
+                "Asteroid": {
+                    'random_ranges' : {
+                        'interval_min' : 10,
+                        'interval_max' : 20,
+                        'count_min' : 3,
+                        'count_max' : 5,
+                        'direction_min' : 0,
+                        'direction_max' : 360,
+                        'speed_min' : 30,
+                        'speed_max' : 70,
+                        'position_type' : "offmap",
                     }
                 },
-            ]
+            },
+            {
+                "Ufo": {
+                    'random_ranges' : {
+                        'interval_min' : 10,
+                        'interval_max' : 30,
+                        'count_min' : 1,
+                        'count_max' : 3,
+                        'direction_min' : 0,
+                        'direction_max' : 360,
+                        'speed_min' : 30,
+                        'speed_max' : 70,
+                        'position_type' : "offmap",
+                    }
+                },
+            },
+            {
+                "Turret": {
+                    'random_ranges' : {
+                        'interval_min' : 20,
+                        'interval_max' : 60,
+                        'count_min' : 1,
+                        'count_max' : 2,
+                        'centerx_min': 0,
+                        'centery_min': 700
+                    }
+                }
+            },
+        ]
     },
 } # map defs
 
@@ -223,20 +271,20 @@ class WorldMap(object):
         room = RoomMap(self.game_context, levelid)
         self.rooms[levelid[0]][levelid[1]] = room
 
-        north = None
-        south = None
-        east = None
-        west = None
-        if levelid[1] != 0:
-            north = self.rooms[levelid[0]][levelid[1] + 1]
-        if levelid[1] != self.size[1] - 1:
-            south = self.rooms[levelid[0]][levelid[1] - 1]
-        if levelid[0] != 0:
-            east = self.rooms[levelid[0] + 1][levelid[1]]
-        if levelid[0] != self.size[0] - 1:
-            west = self.rooms[levelid[0] - 1][levelid[1]]
+        #north = None
+        #south = None
+        #east = None
+        #west = None
+        #if levelid[1] != 0:
+        #    north = self.rooms[levelid[0]][levelid[1] + 1]
+        #if levelid[1] != self.size[1] - 1:
+        #    south = self.rooms[levelid[0]][levelid[1] - 1]
+        #if levelid[0] != 0:
+        #    east = self.rooms[levelid[0] + 1][levelid[1]]
+        #if levelid[0] != self.size[0] - 1:
+        #    west = self.rooms[levelid[0] - 1][levelid[1]]
 
-        self.current_exits = (north, south, east, west)
+        #self.current_exits = (north, south, east, west)
         self.current_room = levelid
 
         return room.players

@@ -1,23 +1,25 @@
 import pygame
 import random
 from sprites import MovingSprite
-from animations import Animation
 
 
 class AsteroidFragment(MovingSprite):
 
-    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges={}, *group):
         self.costumes = dict()
         self.costumes_defs = dict()
         self.size = initdata["size"]
         if self.size == 3:
-            self.costumes_defs["default"] = ("main", (302, 20, 50, 43))
+            #self.costumes_defs["default"] = ("main", (302, 20, 50, 43))
+            self.costumes_defs["default"] = ("extended", (0, 0, 61, 48))
         elif self.size == 2:
-            self.costumes_defs["default"] = ("main", (274, 125, 23, 28))
+            #self.costumes_defs["default"] = ("main", (274, 125, 23, 28))
+            self.costumes_defs["default"] = ("extended", (66, 0, 47, 35))
         elif self.size == 1:
-            self.costumes_defs["default"] = ("main", (292, 166, 18, 15))
+            #self.costumes_defs["default"] = random.choice([("main", (292, 166, 18, 15),)
+            self.costumes_defs["default"] = random.choice([("extended", (117, 0, 30, 34)),("extended", (151,0,32,35))])
         self.animations = {}
-        self.animations["explode"] = game_context.animations.get_animation(self, "explode", self.size)
+        self.animations["explode"] = game_context.animations.get_animation(self, "explode", 3)
         super(AsteroidFragment, self).__init__(game_context, initdata=initdata, random_ranges=random_ranges,*group)
         self.deceleration = False
         self.collision_entity = "mob"
@@ -38,7 +40,6 @@ class AsteroidFragment(MovingSprite):
                 self.parent.divide(self)
                 self.explode()
 
-
     def update(self):
         if self.status == "exploding":
             try:
@@ -53,7 +54,7 @@ class AsteroidFragment(MovingSprite):
 
 class Asteroid(pygame.sprite.Group):
 
-    def __init__(self, game_context, initdata={}, random_ranges=None, *group):
+    def __init__(self, game_context, initdata={}, random_ranges={}, *group):
         super(Asteroid, self).__init__()
         self.spriteslib = game_context.sprites
         initdata["size"] = 3

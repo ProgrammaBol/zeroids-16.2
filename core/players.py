@@ -7,7 +7,7 @@ from sprites import MovingSprite
 
 class AlloyShip(MovingSprite):
 
-    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges={}, *group):
         self.max_speed = 100
         self.costumes = dict()
         self.costumes_defs = dict()
@@ -53,7 +53,7 @@ class AlloyShip(MovingSprite):
 
     def handle_collision(self, sprite):
         if sprite.parent is not self.parent:
-            self.parent.health -= 50
+            self.parent.health -= 1
             if self.parent.health <= 0:
                 self.explode()
 
@@ -70,7 +70,7 @@ class AlloyShip(MovingSprite):
 
 class Player(pygame.sprite.Group):
 
-    def __init__(self, main_sprite_class, game_context, initdata={}, random_ranges=None):
+    def __init__(self, main_sprite_class, game_context, initdata={}, random_ranges={}):
         super(Player, self).__init__()
         self.spriteslib = game_context.sprites
         self.main_sprite = self.spriteslib.get_sprite(main_sprite_class, game_context, initdata=initdata, random_ranges=random_ranges, parent=self)
@@ -89,7 +89,6 @@ class Player(pygame.sprite.Group):
         ammo_sprite.centery = self.main_sprite.centery
         self.soundslib.single_play(self.current_weapon.soundname)
         self.add(ammo_sprite)
-        print self.main_sprite.destroyed
 
     def stop_shooting(self):
         pass

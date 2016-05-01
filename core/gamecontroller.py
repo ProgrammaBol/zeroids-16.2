@@ -12,7 +12,7 @@ class GameController(object):
     def __init__(self, event_queue, game_context):
         self.players = dict()
         self.status = "menu-init"
-        self.worldmap = WorldMap(game_context, (1, 4))
+        self.worldmap = WorldMap(game_context, (1, 5))
         self.elements = pygame.sprite.LayeredUpdates()
         self.event_queue = event_queue
         self.clock = game_context.clock
@@ -59,26 +59,42 @@ class GameController(object):
         pass
 
     def collisions(self):
-        for sprite in self.elements.sprites():
-            # if sprite is in element, collide return as if sprite collides with itself
-            if not sprite.immutable and not sprite.shape == "line":
-                self.elements.remove(sprite)
+        collision_elements = self.elements.copy()
+        collision_pairs = []
+        for sprite in collision_elements:
+            if not sprite.immutable:
                 sprite.active_collisions.empty()
-                collided = pygame.sprite.spritecollide(sprite, self.elements, False, collided=pygame.sprite.collide_rect)
-                for collided_sprite in collided:
-                    if not collided_sprite.shape == "line" and not collided_sprite.immutable:
+        while collision_elements.sprites():
+            sprite = collision_elements.sprites().pop(0)
+            collision_elements.remove(sprite)
+            collided = pygame.sprite.spritecollide(sprite, collision_elements, False)
+            if not collided:
+                continue
+            for collided_sprite in collided:
+                pair = set([sprite, collided_sprite])
+                if pair in collision_pairs:
+                    continue
+                else:
+                    collision_pairs.append(pair)
+                point = None
+                if collided_sprite.shape != "line" and sprite.shape != "line":
+                    point = pygame.sprite.collide_mask(sprite, collided_sprite)
+                elif collided_sprite.shape == "line" and sprite.shape != "line":
+                    y = collided_sprite.m * sprite.rect.x + collided_sprite.q
+                    if y >= sprite.rect.y and y <= sprite.rect.y + sprite.rect.height:
                         point = pygame.sprite.collide_mask(sprite, collided_sprite)
-                        if point:
-                            sprite.active_collisions.add(collided_sprite)
-                            sprite.collision_points[collided_sprite] = point
-                    elif collided_sprite.shape == "line":
-                        y = collided_sprite.m * sprite.rect.x + collided_sprite.q
-                        if y > sprite.rect.y and y < sprite.rect.y + sprite.rect.height:
-                                point = pygame.sprite.collide_mask(sprite, collided_sprite)
-                                if point:
-                                    sprite.active_collisions.add(collided_sprite)
-                                    sprite.collision_points[collided_sprite] = point
-                self.elements.add(sprite)
+                elif collided_sprite.shape != "line" and sprite.shape == "line":
+                    y = sprite.m * collided_sprite.rect.x + sprite.q
+                    if y >= collided_sprite.rect.y and y <= collided_sprite.rect.y + collided_sprite.rect.height:
+                        point = pygame.sprite.collide_mask(sprite, collided_sprite)
+                if point:
+                    if not collided_sprite.immutable:
+                        collided_sprite.active_collisions.add(sprite)
+                        collided_sprite.collision_points[sprite] = point
+                    if not sprite.immutable:
+                        sprite.active_collisions.add(collided_sprite)
+                        sprite.collision_points[collided_sprite] = point
+
 
     def change_status(self, status):
         self.status = status
@@ -119,7 +135,6 @@ class GameController(object):
 
     def level_init(self, levelid=(0,0)):
         self.players = self.worldmap.load_room(levelid)
-        print self.players
         self.init_controls(None)
         text = "HEALTH: %d" % self.players['player_one'].health
         self.currentstatus_elements['health'] = self.game_context.text.get_textsprite(text)

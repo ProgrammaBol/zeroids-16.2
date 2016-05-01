@@ -6,6 +6,7 @@ class Animation(object):
         self.name = name
         self.sprite = sprite
         self.sound = sound
+        self.game_context = game_context
         self.sequence = {}
         self.playback_position = 0
         self.clock = game_context.clock
@@ -35,8 +36,7 @@ class Animation(object):
 
     def update(self):
         if self.playback_position == 0 and self.sound is not None:
-            # play sound
-            pass
+            self.game_context.sounds.single_play(self.sound)
         costume_name = "animation-%s-%s" % (self.name, self.playback_position)
         self.sprite.change_active_costume(costume_name)
         time_msec = self.clock.get_time()
@@ -52,9 +52,28 @@ class Animations(object):
     def __init__(self, game_context):
         self.game_context = game_context
         self.animations = {}
+        self.animations['bulletexplode'] = {}
+        self.animations['bulletexplode'][0] = {}
+        self.animations['bulletexplode'][0]['sound'] = "gunblast"
+        self.animations['bulletexplode'][0]['duration'] = 500
+        self.animations['bulletexplode'][0]['equal-time'] = True
+        self.animations['bulletexplode'][0]['seq'] = [
+            ("main", (481, 28, 35, 35)),
+            ("main", (470, 20, 1, 1)),
+        ]
+        self.animations['bulletexplode'][1] = {}
+        self.animations['bulletexplode'][1]['sound'] = "gunblast"
+        self.animations['bulletexplode'][1]['duration'] = 500
+        self.animations['bulletexplode'][1]['equal-time'] = True
+        self.animations['bulletexplode'][1]['seq'] = [
+            ("main", (470, 117, 60, 60)),
+            ("main", (477, 65, 40, 40)),
+            ("main", (481, 28, 35, 35)),
+            ("main", (470, 20, 1, 1)),
+        ]
         self.animations['explode'] = {}
         self.animations['explode'][3] = {}
-        self.animations['explode'][3]['sound'] = None
+        self.animations['explode'][3]['sound'] = "explosion"
         self.animations['explode'][3]['duration'] = 1000
         self.animations['explode'][3]['equal-time'] = True
         self.animations['explode'][3]['seq'] = [
@@ -68,7 +87,7 @@ class Animations(object):
             ("explode3", (145, 49, 47, 47)),
         ]
         self.animations['explode'][2] = {}
-        self.animations['explode'][2]['sound'] = None
+        self.animations['explode'][2]['sound'] = "explosion"
         self.animations['explode'][2]['duration'] = 1000
         self.animations['explode'][2]['equal-time'] = True
         self.animations['explode'][2]['seq'] = [
@@ -82,7 +101,7 @@ class Animations(object):
             ("explode2", (169, 1, 22, 22)),
         ]
         self.animations['explode'][1] = {}
-        self.animations['explode'][1]['sound'] = None
+        self.animations['explode'][1]['sound'] = "explosion"
         self.animations['explode'][1]['duration'] = 1000
         self.animations['explode'][1]['equal-time'] = True
         self.animations['explode'][1]['seq'] = [
@@ -96,9 +115,9 @@ class Animations(object):
         ]
 
     def get_animation(self, sprite, name, size):
-        animation = Animation(self.game_context, sprite, name, sound = self.animations['explode'][1]['sound'])
+        animation = Animation(self.game_context, sprite, name, sound=self.animations[name][size]['sound'])
         animation.add_sequence(self.animations[name][size]['seq'],
-                               self.animations['explode'][1]['duration'],
-                               equal_time=self.animations['explode'][1]['equal-time'],
+                               self.animations[name][size]['duration'],
+                               equal_time=self.animations[name][size]['equal-time'],
                                defs=True)
         return animation

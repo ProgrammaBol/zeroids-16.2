@@ -14,10 +14,12 @@ class TextSprite(pygame.sprite.Sprite):
         self.text = text
         self.position = position
         self.game_context = game_context
+        self.collision_entity = "text"
         self.color = color
         self.set_text(self.text)
         self.shape = "rect"
         self.immutable = True
+        self.parent = None
 
     def set_text(self, text, color=(255, 255, 255)):
         self.image = self.font.render(text, True, color)

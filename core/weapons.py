@@ -7,19 +7,13 @@ from exceptions import AnimationEnded
 
 class Bullet(MovingSprite):
 
-    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges={}, *group):
+        self.game_context = game_context
         self.costumes = dict()
         self.costumes_defs = dict()
         self.animations = {}
         self.costumes_defs["default"] = ("main", (110, 220, 3, 3))
-        self.animations["explode"] = Animation(game_context, self, "explode")
-        explode_seq = [
-            ("main", (470, 117, 60, 60)),
-            ("main", (477, 65, 40, 40)),
-            ("main", (481, 28, 35, 35)),
-            ("main", (470, 20, 1, 1)),
-        ]
-        self.animations["explode"].add_sequence(explode_seq, 500, equal_time=True, defs=True)
+        self.animations["explode"] = self.game_context.animations.get_animation(self, "bulletexplode", 0)
         super(Bullet, self).__init__(game_context, *group)
         self.deceleration = False
         self.border_action = "destroy"
@@ -27,14 +21,12 @@ class Bullet(MovingSprite):
         self.collision_entity = "salve"
         self.parent = parent
         self.parent_class = None
-        self.soundslib = game_context.sounds
 
     def good_hit(self):
         self.speed_x = 0
         self.speed_y = 0
         self.status = "exploding"
         self.collision_entity = "explosion"
-        self.soundslib.single_play("gunblast")
 
     def handle_collision(self, sprite):
         if sprite.parent is self.parent:
@@ -69,7 +61,7 @@ class Gun(object):
 
 class Laser(StaticSprite):
 
-    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges={}, *group):
         self.costumes = dict()
         self.parent = parent
         self.parent_class = None
@@ -78,7 +70,6 @@ class Laser(StaticSprite):
         initdata['immutable'] = False
         self.target = initdata.get('target', None)
         self.collision_entity = "salve"
-        self.soundslib = game_context.sounds
         #self.angle = initdata['angle']
         # find angle
         distancex = self.parent.centerx - self.target[0]
@@ -160,7 +151,6 @@ class Laser(StaticSprite):
 
     def good_hit(self, sprite):
         # accorcia il laser fino al primo sprite colpito
-        #self.soundslib.single_play("gunblast")
         self.ray_x = self.collision_points[sprite][0]
         self.ray_y = self.collision_points[sprite][1]
         self.animations["ray"] = Animation(self.game_context, self, "ray")
@@ -180,7 +170,7 @@ class Laser(StaticSprite):
         self.change_active_costume('default')
 
     def handle_collision(self, sprite):
-        if sprite is not self.parent:
+        if sprite is not self.parent and sprite.collision_entity is not "text":
             #trova lo sprite piu' vicino
             self.good_hit(sprite)
 

@@ -2,38 +2,23 @@ import math
 import pygame
 import random
 from sprites import MovingSprite
-from animations import Animation
 from weapons import Gun
 
 
 
 class UfoShip(MovingSprite):
 
-    def __init__(self, game_context, parent=None, initdata=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges={}, *group):
         self.costumes = dict()
         self.costumes_defs = dict()
-        self.costumes_defs["default"] = ("main", (92, 159, 28, 23))
+        #self.costumes_defs["default"] = ("main", (92, 159, 28, 23))
+        self.costumes_defs["default"] = ("extended", (0, 100, 50, 24))
         self.animations = {}
-        self.animations["explode"] = Animation(game_context, self, "explode")
-        explode_seq = [
-            ("explode3", (0, 0, 47, 47)),
-            ("explode3", (49, 0, 47, 47)),
-            ("explode3", (97, 0, 47, 47)),
-            ("explode3", (145, 0, 47, 47)),
-            ("explode3", (0, 49, 47, 47)),
-            ("explode3", (49, 49, 47, 47)),
-            ("explode3", (97, 49, 47, 47)),
-            ("explode3", (145, 49, 47, 47)),
-        ]
-        self.animations["explode"].add_sequence(explode_seq, 1000, equal_time=True)
-        super(UfoShip, self).__init__(game_context, *group)
+        self.animations["explode"] = game_context.animations.get_animation(self, "explode", 3)
+        super(UfoShip, self).__init__(game_context, initdata=initdata, random_ranges=random_ranges, *group)
         self.deceleration = False
         self.collision_entity = "mob"
         self.angular_speed = 0
-        self.start_speed = initdata["speed"]
-        self.centerx = initdata["centerx"]
-        self.centery = initdata["centery"]
-        self.direction = initdata["direction"]
         self.parent = parent
         self.border_action = "bounce"
         self.ai_eval_time = 2000
@@ -47,7 +32,7 @@ class UfoShip(MovingSprite):
         self.status = "exploding"
 
     def handle_collision(self, sprite):
-        if sprite.collision_entity == "salve" and sprite.owner is not self:
+        if sprite.collision_entity == "salve" and sprite.parent is not self.parent:
             self.explode()
 
     def ai_move(self):
@@ -86,10 +71,10 @@ class UfoShip(MovingSprite):
 
 class Ufo(pygame.sprite.Group):
 
-    def __init__(self, game_context, initdata=None, *group):
+    def __init__(self, game_context, initdata={}, random_ranges={}, *group):
         super(Ufo, self).__init__()
         self.spriteslib = game_context.sprites
-        self.main_sprite = self.spriteslib.get_sprite(UfoShip, game_context, initdata=initdata, parent=self)
+        self.main_sprite = self.spriteslib.get_sprite(UfoShip, game_context, initdata=initdata, random_ranges=random_ranges, parent=self)
         self.add(self.main_sprite)
         self.weapons = dict()
         self.weapons["gun"] = Gun()
@@ -100,7 +85,6 @@ class Ufo(pygame.sprite.Group):
 
     def shoot(self):
         ammo_sprite = self.spriteslib.get_sprite(self.current_weapon.ammo_class, self.game_context, parent=self)
-        ammo_sprite.owner = self.main_sprite
         target = random.choice(self.targets)
         distancex = self.main_sprite.centerx - target.centerx
         distancey = self.main_sprite.centery - target.centery
