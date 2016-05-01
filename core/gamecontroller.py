@@ -40,19 +40,6 @@ class GameController(object):
                 'tilesize' : (30,30),
                 'tilemap' : None,
                 'player_pos' : (600,400),
-                'random_ranges' : {
-                    'interval_min' : 10,
-                    'interval_max' : 10,
-                    'count_min' : 3,
-                    'count_max' : 5,
-                    'direction_min' : 0,
-                    'direction_max' : 360,
-                    'speed_min' : 30,
-                    'speed_max' : 70,
-                    'position_type' : "offmap",
-                },
-                'mobs': [],
-                'spawns': []
             }
         if levelid == (0,1):
             map_def = {
@@ -61,21 +48,44 @@ class GameController(object):
                 'tilesize' : (30,30),
                 'tilemap' : None,
                 'player_pos' : (600,400),
-                'random_ranges' : {
-                    'interval_min' : 10,
-                    'interval_max' : 10,
-                    'count_min' : 3,
-                    'count_max' : 5,
-                    'direction_min' : 0,
-                    'direction_max' : 360,
-                    'speed_min' : 30,
-                    'speed_max' : 70,
-                    'position_type' : "offmap",
-                },
-                'mobs': [
-                    ('Asteroid', None)
-                ],
-                'spawns': []
+                'spawns': [
+                    {
+                        "Asteroid": {
+                            'random_ranges' : {
+                                'direction_min' : 0,
+                                'direction_max' : 360,
+                                'speed_min' : 30,
+                                'speed_max' : 70,
+                                'position_type' : "offmap",
+                            }
+                        }
+                    },
+                ]
+            }
+        if levelid == (0,2):
+            map_def = {
+                'name' : 'Level 4',
+                'size' : (32, 32),
+                'tilesize' : (30,30),
+                'tilemap' : None,
+                'player_pos' : (600,400),
+                'spawns': [
+                    {
+                        "Asteroid": {
+                            'random_ranges' : {
+                                'interval_min' : 10,
+                                'interval_max' : 10,
+                                'count_min' : 3,
+                                'count_max' : 5,
+                                'direction_min' : 0,
+                                'direction_max' : 360,
+                                'speed_min' : 30,
+                                'speed_max' : 70,
+                                'position_type' : "offmap",
+                            }
+                        }
+                    },
+                ]
             }
         room = RoomMap(self.game_context, map_def)
 

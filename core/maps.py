@@ -50,16 +50,10 @@ class RoomMap(object):
         self.resolution = game_context.resolution
         self.game_context = game_context
         self.player_pos = map_def['player_pos']
-        self.random_ranges = map_def['random_ranges']
-        for mob in map_def['mobs']:
-            try:
-                mob_class = globals()[mob[0]]
-            except KeyError:
-                continue
-            if mob[1] is None:
-                self.add_mob(mob_class, random_ranges=self.random_ranges)
-            else:
-                self.add_mob(mob_class, initdata=mob[1])
+        spawns = map_def.get('spawns', [])
+        for spawn_group in spawns:
+            mob_class_name, definitions = spawn_group.popitem()
+            self.add_spawns(mob_class_name, definitions)
 
 
 
@@ -67,12 +61,7 @@ class RoomMap(object):
         pass
 
     def generate_random_init(self, ranges):
-        interval_min = ranges['interval_min']
-        interval_max = ranges['interval_max']
-        interval = random.randint(interval_min, interval_max)
-        init = {}
-        init["interval"]= interval
-        return init
+        pass
 
     def set_tile(self, tileid, position):
         tile = self.tiles[position[0]][position[1]]
@@ -93,47 +82,67 @@ class RoomMap(object):
         self.background.image = image
 
     def add_mob(self, mob_class, initdata={}, random_ranges=None):
-        mob = mob_class(self.game_context, initdata=initdata, random_ranges=random_ranges)
         #sprite = mob.main_sprite
         #sprite.centerx = position[0] * self.tilesize[0] + self.tilesize[0]/2
         #sprite.centery = position[1] * self.tilesize[1] + self.tilesize[1]/2
         #sprite.setup_ai(ai_scheme)
-        self.mobs.append(mob)
         return mob
 
-    def add_spawns(self, mob_class, inits=None, random_ranges=None, multiple=True):
+    def add_spawn(self, mob_class, inidata=None, random_ranges=None):
+        pass
+
+    def add_spawns(self, mob_class_name, definitions):
+        initdata = definitions.get('initdata', {})
+        random_ranges = definitions.get('random_ranges', None)
+        multiple = definitions.get('multiple', True)
         ''' if mutiple=False a new spawn will not be created if the first
         is still present '''
-        if inits is None and random_ranges is None:
+        if not initdata and random_ranges is None:
             raise Exception
+        try:
+            mob_class = globals()[mob_class_name]
+        except KeyError:
+            return None
+
 
         self.spawns[mob_class.__name__] = {}
-        if inits is None:
-            inits = []
-            count_min = random_ranges['count_min']
-            count_max = random_ranges['count_max']
-            count = random.randint(count_min, count_max)
-            for spawn in range(count):
-                init = self.generate_random_init(ranges)
-                inits.append(init)
+        count_min = random_ranges.get('count_min', 1)
+        count_max = random_ranges.get('count_max', 1)
+        count = random.randint(count_min, count_max)
+        intervals = []
+        for spawn in range(count):
+            interval_min = float(random_ranges.get('interval_min', 0.0))
+            interval_max = float(random_ranges.get('interval_max', 0.0))
+            interval = random.randint(interval_min, interval_max)
+            intervals.append(interval)
 
+        self.spawns[mob_class.__name__]['completed'] = False
         self.spawns[mob_class.__name__]['class'] = mob_class
-        self.spawns[mob_class.__name__]['inits'] = inits
+        self.spawns[mob_class.__name__]['initdata'] = initdata
+        self.spawns[mob_class.__name__]['random_ranges'] = random_ranges
         self.spawns[mob_class.__name__]['last'] = None
         self.spawns[mob_class.__name__]['multiple'] = multiple
-        self.spawns[mob_class.__name__]['next_countdown'] = float(inits[0]['interval'])
+        self.spawns[mob_class.__name__]['intervals'] = intervals
+        self.spawns[mob_class.__name__]['next_countdown'] = intervals.pop(0)
 
     def update(self):
         for mob_class, infos in self.spawns.iteritems():
-            if infos['inits']:
-                time = float(self.clock.get_time())/1000
-                infos['next_countdown'] -= time
-                if infos['next_countdown'] < 0:
-                    initdata = infos['inits'].pop(0)
-                    mob = self.add_mob(infos['class'], initdata=initdata, random_ranges=None)
-                    infos['last'] = mob
-                    if infos['inits']:
-                        infos['next_countdown'] = float(infos['inits'][0]['interval'])
+            if infos['completed']:
+                continue
+            time = float(self.clock.get_time())/1000.0
+            infos['next_countdown'] -= time
+            random_ranges = infos['random_ranges']
+            if infos['next_countdown'] <= 0:
+                initdata = infos['initdata']
+                mob_class = infos['class']
+                mob = mob_class(self.game_context, initdata=initdata, random_ranges=random_ranges)
+                self.mobs.append(mob)
+                infos['last'] = mob
+                try:
+                    infos['next_countdown'] = infos['intervals'].pop(0)
+                except IndexError:
+                    infos['completed'] = True
+
         return self.elements, self.mobs
 
 class WorldMap(object):
