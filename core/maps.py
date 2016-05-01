@@ -2,6 +2,79 @@ import pygame
 import random
 from sprites import StaticSprite
 from asteroids import Asteroid
+from ufo import Ufo
+from turret import Turret
+from players import Player, AlloyShip
+
+levels = {
+    (0,0): {
+            'name' : 'Level 1',
+            'size' : (32, 32),
+            'tilesize' : (30,30),
+            'tilemap' : None,
+            'player_pos' : (600,400),
+    },
+    (0,1): {
+            'name' : 'Level 2',
+            'size' : (32, 32),
+            'tilesize' : (30,30),
+            'tilemap' : None,
+            'player_pos' : (600,400),
+            'spawns': [
+                {
+                    "Asteroid": {
+                        'random_ranges' : {
+                            'direction_min' : 0,
+                            'direction_max' : 360,
+                            'speed_min' : 30,
+                            'speed_max' : 70,
+                            'position_type' : "offmap",
+                        }
+                    }
+                },
+            ]
+    },
+    (0,2): {
+            'name' : 'Level 4',
+            'size' : (32, 32),
+            'tilesize' : (30,30),
+            'tilemap' : None,
+            'player_pos' : (600,400),
+            'spawns': [
+                {
+                    "Turret": {
+                        'random_ranges' : {
+                            'position_type' : "inmap",
+                        }
+                    }
+                },
+            ]
+    },
+    (0,3): {
+            'name' : 'Level 5',
+            'size' : (32, 32),
+            'tilesize' : (30,30),
+            'tilemap' : None,
+            'player_pos' : (600,400),
+            'spawns': [
+                {
+                    "Asteroid": {
+                        'random_ranges' : {
+                            'interval_min' : 10,
+                            'interval_max' : 10,
+                            'count_min' : 3,
+                            'count_max' : 5,
+                            'direction_min' : 0,
+                            'direction_max' : 360,
+                            'speed_min' : 30,
+                            'speed_max' : 70,
+                            'position_type' : "offmap",
+                        }
+                    }
+                },
+            ]
+    },
+} # map defs
 
 class TileSet(dict):
 
@@ -36,7 +109,8 @@ class Background(object):
 
 class RoomMap(object):
 
-    def __init__(self, game_context, map_def):
+    def __init__(self, game_context, levelid):
+        map_def = levels[levelid]
         self.name = map_def['name']
         self.elements = pygame.sprite.Group()
         size = map_def['size']
@@ -50,17 +124,18 @@ class RoomMap(object):
         self.resolution = game_context.resolution
         self.game_context = game_context
         self.player_pos = map_def['player_pos']
+        self.players = {}
+        player_initdata = dict()
+        player_initdata['centerx'] = self.player_pos[0]
+        player_initdata['centery'] = self.player_pos[1]
+        self.players["player_one"] = Player(AlloyShip, self.game_context, initdata=player_initdata)
+
         spawns = map_def.get('spawns', [])
         for spawn_group in spawns:
             mob_class_name, definitions = spawn_group.popitem()
             self.add_spawns(mob_class_name, definitions)
 
-
-
     def load_map_def(self, map_def):
-        pass
-
-    def generate_random_init(self, ranges):
         pass
 
     def set_tile(self, tileid, position):
@@ -80,16 +155,6 @@ class RoomMap(object):
     def set_background(self, color, image=None):
         self.background.color = color
         self.background.image = image
-
-    def add_mob(self, mob_class, initdata={}, random_ranges=None):
-        #sprite = mob.main_sprite
-        #sprite.centerx = position[0] * self.tilesize[0] + self.tilesize[0]/2
-        #sprite.centery = position[1] * self.tilesize[1] + self.tilesize[1]/2
-        #sprite.setup_ai(ai_scheme)
-        return mob
-
-    def add_spawn(self, mob_class, inidata=None, random_ranges=None):
-        pass
 
     def add_spawns(self, mob_class_name, definitions):
         initdata = definitions.get('initdata', {})
@@ -116,6 +181,7 @@ class RoomMap(object):
             interval = random.randint(interval_min, interval_max)
             intervals.append(interval)
 
+        initdata['targets'] = [self.players["player_one"].main_sprite]
         self.spawns[mob_class.__name__]['completed'] = False
         self.spawns[mob_class.__name__]['class'] = mob_class
         self.spawns[mob_class.__name__]['initdata'] = initdata
@@ -147,37 +213,33 @@ class RoomMap(object):
 
 class WorldMap(object):
 
-    def __init__(self, size):
+    def __init__(self, game_context, size):
         self.rooms = list([None for r in range(size[1])] for c in range(size[0]))
         self.current_room = None
         self.size = size
+        self.game_context = game_context
 
-    def add_room(self, room_map, position):
-        self.rooms[position[0]][position[1]] = room_map
+    def load_room(self, levelid):
+        room = RoomMap(self.game_context, levelid)
+        self.rooms[levelid[0]][levelid[1]] = room
 
-    def set_current_room(self, position):
         north = None
         south = None
         east = None
         west = None
-        if position[1] != 0:
-            north = self.rooms[position[0]][position[1] + 1]
-        if position[1] != self.size[1] - 1:
-            south = self.rooms[position[0]][position[1] - 1]
-        if position[0] != 0:
-            east = self.rooms[position[0] + 1][position[1]]
-        if position[0] != self.size[0] - 1:
-            west = self.rooms[position[0] - 1][position[1]]
+        if levelid[1] != 0:
+            north = self.rooms[levelid[0]][levelid[1] + 1]
+        if levelid[1] != self.size[1] - 1:
+            south = self.rooms[levelid[0]][levelid[1] - 1]
+        if levelid[0] != 0:
+            east = self.rooms[levelid[0] + 1][levelid[1]]
+        if levelid[0] != self.size[0] - 1:
+            west = self.rooms[levelid[0] - 1][levelid[1]]
 
         self.current_exits = (north, south, east, west)
-        self.current_room = position
-        room = self.rooms[self.current_room[0]][self.current_room[1]]
+        self.current_room = levelid
 
-        player_initdata = dict()
-        player_initdata['centerx'] = room.player_pos[0]
-        player_initdata['centery'] = room.player_pos[1]
-
-        return player_initdata
+        return room.players
 
     def get_current_room(self):
         return self.rooms[self.current_room[0]][self.current_room[1]]

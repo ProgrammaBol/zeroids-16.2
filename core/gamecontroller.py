@@ -1,10 +1,6 @@
 import pygame
 import pprint
 from maps import RoomMap, WorldMap
-from asteroids import Asteroid
-from players import Player, AlloyShip
-from ufo import Ufo
-from turret import Turret
 # levels (roomid)
 
 def weightedcollide():
@@ -16,7 +12,7 @@ class GameController(object):
     def __init__(self, event_queue, game_context):
         self.players = dict()
         self.status = "menu-init"
-        self.worldmap = WorldMap((1, 4))
+        self.worldmap = WorldMap(game_context, (1, 4))
         self.elements = pygame.sprite.LayeredUpdates()
         self.event_queue = event_queue
         self.clock = game_context.clock
@@ -32,65 +28,10 @@ class GameController(object):
         self.status = "level-init"
 
     def load_map(self, levelid):
+        pass
         # load map file(levelid)
-        if levelid == (0,0):
-            map_def = {
-                'name' : 'Level 1',
-                'size' : (32, 32),
-                'tilesize' : (30,30),
-                'tilemap' : None,
-                'player_pos' : (600,400),
-            }
-        if levelid == (0,1):
-            map_def = {
-                'name' : 'Level 2',
-                'size' : (32, 32),
-                'tilesize' : (30,30),
-                'tilemap' : None,
-                'player_pos' : (600,400),
-                'spawns': [
-                    {
-                        "Asteroid": {
-                            'random_ranges' : {
-                                'direction_min' : 0,
-                                'direction_max' : 360,
-                                'speed_min' : 30,
-                                'speed_max' : 70,
-                                'position_type' : "offmap",
-                            }
-                        }
-                    },
-                ]
-            }
-        if levelid == (0,2):
-            map_def = {
-                'name' : 'Level 4',
-                'size' : (32, 32),
-                'tilesize' : (30,30),
-                'tilemap' : None,
-                'player_pos' : (600,400),
-                'spawns': [
-                    {
-                        "Asteroid": {
-                            'random_ranges' : {
-                                'interval_min' : 10,
-                                'interval_max' : 10,
-                                'count_min' : 3,
-                                'count_max' : 5,
-                                'direction_min' : 0,
-                                'direction_max' : 360,
-                                'speed_min' : 30,
-                                'speed_max' : 70,
-                                'position_type' : "offmap",
-                            }
-                        }
-                    },
-                ]
-            }
-        room = RoomMap(self.game_context, map_def)
 
         # Mobs
-        #room.add_spawns(Asteroid, randome_ranges=random_ranges)
         # ufo
         #initdata = {}
         #initdata['targets'] = [self.players["player_one"].main_sprite]
@@ -98,23 +39,21 @@ class GameController(object):
         # staring_room.loadtiles()
         # turret
         #random_ranges['position_type'] = "inmap"
-        #initdata['targets'] = [self.players["player_one"].main_sprite]
         #room.add_mob(Turret, initdata=initdata, random_ranges=random_ranges)
 
-        self.worldmap.add_room(room, levelid)
 
     def toggle_pause(self):
         self.pause = not self.pause
 
     def init_controls(self, controls_config):
-        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_LEFT,  self.players["player_one"].main_sprite.rotate_left)
-        self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_LEFT,  self.players["player_one"].main_sprite.stop_rotate_left)
-        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_RIGHT,  self.players["player_one"].main_sprite.rotate_right)
-        self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_RIGHT,  self.players["player_one"].main_sprite.stop_rotate_right)
+        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_LEFT,  self.players["player_one"].keypress_left)
+        self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_LEFT,  self.players["player_one"].keyrelease_left)
+        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_RIGHT,  self.players["player_one"].keypress_right)
+        self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_RIGHT,  self.players["player_one"].keyrelease_right)
         self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_UP,  self.players["player_one"].keypress_up)
         self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_UP,  self.players["player_one"].keyrelease_up)
-        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_SPACE,  self.players["player_one"].shoot)
-        self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_SPACE,  self.players["player_one"].stop_shooting)
+        self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_SPACE,  self.players["player_one"].keypress_space)
+        self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_SPACE,  self.players["player_one"].keyrelease_space)
 
     def initcutscene(self, cutsceneid):
         pass
@@ -179,9 +118,8 @@ class GameController(object):
 
 
     def level_init(self, levelid=(0,0)):
-        self.load_map(levelid)
-        player_initdata = self.worldmap.set_current_room(levelid)
-        self.players["player_one"] = Player(AlloyShip, self.game_context, initdata=player_initdata)
+        self.players = self.worldmap.load_room(levelid)
+        print self.players
         self.init_controls(None)
         text = "HEALTH: %d" % self.players['player_one'].health
         self.currentstatus_elements['health'] = self.game_context.text.get_textsprite(text)
@@ -237,7 +175,6 @@ class GameController(object):
         for sprite in self.elements.sprites():
             if getattr(sprite, "destroyed", False):
                 sprite.kill()
-                del (sprite)
 
         self.elements.update()
 

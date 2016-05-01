@@ -120,7 +120,7 @@ class MovingSprite(StaticSprite):
     def __init__(self, game_context, initdata={}, random_ranges=None, *group):
         super(MovingSprite, self).__init__(game_context, initdata=initdata, random_ranges=random_ranges, *group)
         if random_ranges:
-            initdata = self.generate_random_init(random_ranges)
+            initdata.update(self.generate_random_init(random_ranges))
         getattr(self, "max_speed", 0)
         getattr(self, "start_speed", 0)
         self.start_speed = initdata.get('start_speed', 0)
@@ -142,10 +142,10 @@ class MovingSprite(StaticSprite):
         self.angle_is_direction = False
 
     def generate_random_init(self, ranges):
-        speed_min = ranges['speed_min']
-        speed_max = ranges['speed_max']
-        direction_min = ranges['direction_min']
-        direction_max = ranges['direction_max']
+        speed_min = ranges.get('speed_min', 0)
+        speed_max = ranges.get('speed_max', 0)
+        direction_min = ranges.get('direction_min', 0)
+        direction_max = ranges.get('direction_max', 0)
         direction = random.randint(direction_min, direction_max)
         speed = random.randint(speed_min, speed_max)
         init = {}

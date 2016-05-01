@@ -2,34 +2,20 @@ import pygame
 import math
 import random
 from sprites import MovingSprite
-from animations import Animation
 from weapons import LaserGun
 
 class LaserTurret(MovingSprite):
 
-    def __init__(self, game_context, parent=None, initdata=None, *group):
+    def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
         self.costumes = dict()
         self.costumes_defs = dict()
         self.costumes_defs["default"] = ("main", (26, 292, 29, 29))
         self.animations = {}
-        self.animations["explode"] = Animation(game_context, self, "explode")
-        explode_seq = [
-            ("explode3", (0, 0, 47, 47)),
-            ("explode3", (49, 0, 47, 47)),
-            ("explode3", (97, 0, 47, 47)),
-            ("explode3", (145, 0, 47, 47)),
-            ("explode3", (0, 49, 47, 47)),
-            ("explode3", (49, 49, 47, 47)),
-            ("explode3", (97, 49, 47, 47)),
-            ("explode3", (145, 49, 47, 47)),
-        ]
-        self.animations["explode"].add_sequence(explode_seq, 1000, equal_time=True)
-        super(LaserTurret, self).__init__(game_context, *group)
+        self.animations["explode"] = game_context.animations.get_animation(self, "explode", 3)
+        super(LaserTurret, self).__init__(game_context, initdata=initdata, random_ranges=random_ranges, *group)
         self.deceleration = False
         self.collision_entity = "mob"
         self.angular_speed = 0
-        self.centerx = initdata["centerx"]
-        self.centery = initdata["centery"]
         self.parent = parent
         self.ai_eval_time = 2000
         self.ai_countdown = self.ai_eval_time
@@ -43,7 +29,7 @@ class LaserTurret(MovingSprite):
         self.status = "exploding"
 
     def handle_collision(self, sprite):
-        if sprite.collision_entity == "salve" and sprite.owner is not self:
+        if sprite.collision_entity == "salve" and sprite.parent is not self:
             self.explode()
 
     def ai_move(self):
@@ -79,10 +65,10 @@ class LaserTurret(MovingSprite):
 
 class Turret(pygame.sprite.Group):
 
-    def __init__(self, game_context, initdata=None, *group):
+    def __init__(self, game_context, initdata={}, random_ranges=None, *group):
         super(Turret, self).__init__()
         self.spriteslib = game_context.sprites
-        self.main_sprite = self.spriteslib.get_sprite(LaserTurret, game_context, initdata=initdata, parent=self)
+        self.main_sprite = self.spriteslib.get_sprite(LaserTurret, game_context, initdata=initdata, random_ranges=random_ranges, parent=self)
         self.add(self.main_sprite)
         self.weapons = dict()
         self.weapons["gun"] = LaserGun()
@@ -92,11 +78,9 @@ class Turret(pygame.sprite.Group):
         self.targets = initdata['targets']
 
     def shoot(self):
+        print self.main_sprite
         initdata = {}
         initdata['target'] = (self.targets[0].centerx, self.targets[0].centery)
-        initdata['owner'] = self.main_sprite
-        initdata['centerx'] = self.main_sprite.centerx
-        initdata['centery'] = self.main_sprite.centery
-        ammo_sprite = self.spriteslib.get_sprite(self.current_weapon.ammo_class, self.game_context, parent=self, initdata=initdata)
+        ammo_sprite = self.spriteslib.get_sprite(self.current_weapon.ammo_class, self.game_context, parent=self.main_sprite, initdata=initdata)
         self.soundslib.single_play(self.current_weapon.soundname)
         self.add(ammo_sprite)

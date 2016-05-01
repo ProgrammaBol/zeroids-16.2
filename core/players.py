@@ -89,6 +89,7 @@ class Player(pygame.sprite.Group):
         ammo_sprite.centery = self.main_sprite.centery
         self.soundslib.single_play(self.current_weapon.soundname)
         self.add(ammo_sprite)
+        print self.main_sprite.destroyed
 
     def stop_shooting(self):
         pass
@@ -112,7 +113,8 @@ class Player(pygame.sprite.Group):
         self.main_sprite.thrust_off()
 
     def keypress_space(self):
-        self.shoot()
+        if not self.main_sprite.destroyed or self.main_sprite.status not in ["exploding", "exploded"]:
+            self.shoot()
 
     def keyrelease_space(self):
         self.stop_shooting()

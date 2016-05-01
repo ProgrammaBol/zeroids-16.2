@@ -71,12 +71,11 @@ class Laser(StaticSprite):
 
     def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
         self.costumes = dict()
-        self.parent = None
+        self.parent = parent
         self.parent_class = None
         self.game_context = game_context
         self.animations = {}
         initdata['immutable'] = False
-        self.parent = initdata.get('parent', None)
         self.target = initdata.get('target', None)
         self.collision_entity = "salve"
         self.soundslib = game_context.sounds
