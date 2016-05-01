@@ -3,6 +3,7 @@ import os
 from sprites import SpritesLib
 from sounds import SoundsLib
 from texts import TextLib
+from animations import Animations
 
 class GameContext(object):
 
@@ -13,6 +14,7 @@ class GameContext(object):
         self.load_graphics()
         self.load_music()
         self.load_fonts()
+        self.load_animations()
 
     def add(self, key, value):
         setattr(self, key, value)
@@ -21,6 +23,8 @@ class GameContext(object):
         self.spriteslib = SpritesLib(self)
         self.spriteslib.add_sheet("main", os.path.normpath("assets/spritelib_gpl/shooter/disasteroids2_master.png"), (0, 0, 0))
         self.spriteslib.add_sheet("explode3", os.path.normpath("assets/spritesheets/Explode3.bmp"), (69, 78, 91))
+        self.spriteslib.add_sheet("explode2", os.path.normpath("assets/spritesheets/Explode1.bmp"), (0, 0, 0))
+        self.spriteslib.add_sheet("explode1", os.path.normpath("assets/spritesheets/Explode2.bmp"), (0, 0, 0))
         self.add("sprites", self.spriteslib)
 
     def load_sounds(self):
@@ -32,6 +36,9 @@ class GameContext(object):
 
     def load_music(self):
         pass
+
+    def load_animations(self):
+        self.animations = Animations(self)
 
     def load_fonts(self):
         self.textlib = TextLib(self)

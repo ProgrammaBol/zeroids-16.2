@@ -18,6 +18,9 @@ class AlloyShip(MovingSprite):
         self.soundslib = game_context.sounds
         self.max_angular_speed = 180
         self.angle_is_direction = True
+        self.parent = parent
+        self.animations = {}
+        self.animations["explode"] = game_context.animations.get_animation(self, "explode", 3)
 
     def rotate_left(self):
         self.angular_speed = -self.max_angular_speed
@@ -43,25 +46,44 @@ class AlloyShip(MovingSprite):
         self.acceleration = 0
         self.soundslib.stop_loop(self.thrust_sound_channel)
 
+    def explode(self):
+        self.speed_x = 0
+        self.speed_y = 0
+        self.status = "exploding"
+
     def handle_collision(self, sprite):
-        pass
+        if sprite.parent is not self.parent:
+            self.parent.health -= 50
+            if self.parent.health <= 0:
+                self.explode()
+
+    def update(self):
+        if self.status == "exploding":
+            try:
+                self.animations["explode"].update()
+            except:
+                self.status = "exploded"
+        else:
+            super(AlloyShip, self).update()
+        if self.status == "exploded":
+            self.destroyed = True
 
 class Player(pygame.sprite.Group):
 
     def __init__(self, main_sprite_class, game_context, initdata={}, random_ranges=None):
         super(Player, self).__init__()
         self.spriteslib = game_context.sprites
-        self.main_sprite = self.spriteslib.get_sprite(main_sprite_class, game_context, initdata=initdata, random_ranges=random_ranges)
+        self.main_sprite = self.spriteslib.get_sprite(main_sprite_class, game_context, initdata=initdata, random_ranges=random_ranges, parent=self)
         self.add(self.main_sprite)
         self.weapons = dict()
         self.weapons["gun"] = Gun()
         self.current_weapon = self.weapons["gun"]
         self.soundslib = game_context.sounds
         self.game_context = game_context
+        self.health = 100
 
     def shoot(self):
         ammo_sprite = self.spriteslib.get_sprite(self.current_weapon.ammo_class, self.game_context, parent=self)
-        ammo_sprite.owner = self.main_sprite
         ammo_sprite.direction = self.main_sprite.direction
         ammo_sprite.centerx = self.main_sprite.centerx
         ammo_sprite.centery = self.main_sprite.centery

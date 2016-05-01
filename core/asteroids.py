@@ -17,18 +17,7 @@ class AsteroidFragment(MovingSprite):
         elif self.size == 1:
             self.costumes_defs["default"] = ("main", (292, 166, 18, 15))
         self.animations = {}
-        self.animations["explode"] = Animation(game_context, self, "explode")
-        explode_seq = [
-            ("explode3", (0, 0, 47, 47)),
-            ("explode3", (49, 0, 47, 47)),
-            ("explode3", (97, 0, 47, 47)),
-            ("explode3", (145, 0, 47, 47)),
-            ("explode3", (0, 49, 47, 47)),
-            ("explode3", (49, 49, 47, 47)),
-            ("explode3", (97, 49, 47, 47)),
-            ("explode3", (145, 49, 47, 47)),
-        ]
-        self.animations["explode"].add_sequence(explode_seq, 1000, equal_time=True, defs=True)
+        self.animations["explode"] = game_context.animations.get_animation(self, "explode", self.size)
         super(AsteroidFragment, self).__init__(game_context, initdata=initdata, random_ranges=random_ranges,*group)
         self.deceleration = False
         self.collision_entity = "mob"
@@ -47,6 +36,7 @@ class AsteroidFragment(MovingSprite):
                 self.explode()
             else:
                 self.parent.divide(self)
+                self.explode()
 
 
     def update(self):
@@ -90,4 +80,3 @@ class Asteroid(pygame.sprite.Group):
             fragment = self.spriteslib.get_sprite(AsteroidFragment, self.game_context, parent=self, initdata=initdata)
             self.add(fragment)
             self.children += 1
-        child.destroyed = True

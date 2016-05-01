@@ -25,8 +25,8 @@ class Bullet(MovingSprite):
         self.border_action = "destroy"
         self.start_speed = 200
         self.collision_entity = "salve"
-        self.owner = None
-        self.owner_class = None
+        self.parent = parent
+        self.parent_class = None
         self.soundslib = game_context.sounds
 
     def good_hit(self):
@@ -37,10 +37,11 @@ class Bullet(MovingSprite):
         self.soundslib.single_play("gunblast")
 
     def handle_collision(self, sprite):
-        if sprite.collision_entity == "salve" and sprite.owner is not self.owner:
-            self.good_hit()
-        elif sprite is not self.owner:
-            self.good_hit()
+        if sprite.parent is self.parent:
+            return
+        if sprite.collision_entity == "salve" and sprite.parent is self.parent:
+            return
+        self.good_hit()
 
     def update(self):
         if self.status == "exploding":
@@ -70,34 +71,34 @@ class Laser(StaticSprite):
 
     def __init__(self, game_context, parent=None, initdata={}, random_ranges=None, *group):
         self.costumes = dict()
-        self.owner = None
-        self.owner_class = None
+        self.parent = None
+        self.parent_class = None
         self.game_context = game_context
         self.animations = {}
         initdata['immutable'] = False
-        self.owner = initdata.get('owner', None)
+        self.parent = initdata.get('parent', None)
         self.target = initdata.get('target', None)
         self.collision_entity = "salve"
         self.soundslib = game_context.sounds
         #self.angle = initdata['angle']
         # find angle
-        distancex = self.owner.centerx - self.target[0]
-        distancey = self.owner.centery - self.target[1]
+        distancex = self.parent.centerx - self.target[0]
+        distancey = self.parent.centery - self.target[1]
         self.ray_angle = (math.degrees(math.atan2(distancey, distancex))- 90) % 360
         m = distancey/distancex
-        q = self.owner.centery - m * self.owner.centerx
+        q = self.parent.centery - m * self.parent.centerx
         # find angle intervals
-        distancex = self.owner.centerx
-        distancey = self.owner.centery
+        distancex = self.parent.centerx
+        distancey = self.parent.centery
         topleft = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
-        distancex = self.owner.centerx
-        distancey = self.owner.centery - game_context.resolution[1]
+        distancex = self.parent.centerx
+        distancey = self.parent.centery - game_context.resolution[1]
         bottomleft = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
-        distancex = self.owner.centerx - game_context.resolution[0]
-        distancey = self.owner.centery
+        distancex = self.parent.centerx - game_context.resolution[0]
+        distancey = self.parent.centery
         topright = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
-        distancex = self.owner.centerx - game_context.resolution[0]
-        distancey = self.owner.centery - game_context.resolution[1]
+        distancex = self.parent.centerx - game_context.resolution[0]
+        distancey = self.parent.centery - game_context.resolution[1]
         bottomright = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
         if self.ray_angle >= topleft or (self.ray_angle > 0 and self.ray_angle < topright):
             y = 0
@@ -115,24 +116,24 @@ class Laser(StaticSprite):
         self.q = q
         self.ray_x = x
         self.ray_y = y
-        if self.ray_x > self.owner.centerx:
-            posx = self.owner.centerx
+        if self.ray_x > self.parent.centerx:
+            posx = self.parent.centerx
         else:
             posx = self.ray_x
-        width = abs(self.ray_x - self.owner.centerx)
-        if self.ray_y > self.owner.centery:
-            posy = self.owner.centery
-            height = self.ray_y - self.owner.centery
+        width = abs(self.ray_x - self.parent.centerx)
+        if self.ray_y > self.parent.centery:
+            posy = self.parent.centery
+            height = self.ray_y - self.parent.centery
         else:
             posy = self.ray_y
-            height = self.owner.centery - self.ray_y
+            height = self.parent.centery - self.ray_y
         initdata['centerx'] = posx + width/2
         initdata['centery'] = posy + height/2
         self.ray_duration = 500
         self.costumes["default"] = pygame.Surface((width,height))
         self.costumes['default'].set_alpha(0)
         super(Laser, self).__init__(game_context, initdata=initdata, *group)
-        self.full_screen = True
+        self.shape = "line"
         self.costumes['default'].set_colorkey((0,0,0))
         self.animations["ray"] = Animation(game_context, self, "ray")
         widths = range(1,6) + range(6,0,-1)
@@ -141,7 +142,7 @@ class Laser(StaticSprite):
         for radius in radiuses:
             image = self.costumes['default'].copy()
             image.set_alpha(127)
-            pygame.draw.circle(image, (255,255,255), (self.owner.rect.centerx, self.owner.rect.centery), radius)
+            pygame.draw.circle(image, (255,255,255), (self.parent.rect.centerx, self.parent.rect.centery), radius)
             self.animations['ray'].add_frame(image, duration_msec=frame_duration, defs=False)
         for ray_width in widths:
             image = self.costumes['default'].copy()
@@ -170,17 +171,17 @@ class Laser(StaticSprite):
         for radius in radiuses:
             image = self.costumes['default'].copy()
             image.set_alpha(127)
-            pygame.draw.circle(image, (255,255,255), (self.owner.rect.centerx, self.owner.rect.centery), radius)
+            pygame.draw.circle(image, (255,255,255), (self.parent.rect.centerx, self.parent.rect.centery), radius)
         for width in widths:
             image = self.costumes['default'].copy()
             image.set_alpha(127)
-            pygame.draw.line(image, (255,255,255), (self.owner.centerx,self.owner.centery), (self.ray_x,self.ray_y), width)
+            pygame.draw.line(image, (255,255,255), (self.parent.centerx,self.parent.centery), (self.ray_x,self.ray_y), width)
             pygame.draw.circle(image, (255,255,255), (self.ray_x, self.ray_y), 8)
             self.animations['ray'].add_frame(image, duration_msec=frame_duration, defs=False)
         self.change_active_costume('default')
 
     def handle_collision(self, sprite):
-        if sprite is not self.owner:
+        if sprite is not self.parent:
             #trova lo sprite piu' vicino
             self.good_hit(sprite)
 

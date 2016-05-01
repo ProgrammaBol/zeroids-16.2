@@ -122,17 +122,17 @@ class GameController(object):
     def collisions(self):
         for sprite in self.elements.sprites():
             # if sprite is in element, collide return as if sprite collides with itself
-            if not sprite.immutable and not sprite.full_screen:
+            if not sprite.immutable and not sprite.shape == "line":
                 self.elements.remove(sprite)
                 sprite.active_collisions.empty()
                 collided = pygame.sprite.spritecollide(sprite, self.elements, False, collided=pygame.sprite.collide_rect)
                 for collided_sprite in collided:
-                    if not collided_sprite.full_screen and not collided_sprite.immutable:
+                    if not collided_sprite.shape == "line" and not collided_sprite.immutable:
                         point = pygame.sprite.collide_mask(sprite, collided_sprite)
                         if point:
                             sprite.active_collisions.add(collided_sprite)
                             sprite.collision_points[collided_sprite] = point
-                    elif collided_sprite.full_screen:
+                    elif collided_sprite.shape == "line":
                         y = collided_sprite.m * sprite.rect.x + collided_sprite.q
                         if y > sprite.rect.y and y < sprite.rect.y + sprite.rect.height:
                                 point = pygame.sprite.collide_mask(sprite, collided_sprite)
@@ -183,11 +183,16 @@ class GameController(object):
         player_initdata = self.worldmap.set_current_room(levelid)
         self.players["player_one"] = Player(AlloyShip, self.game_context, initdata=player_initdata)
         self.init_controls(None)
+        text = "HEALTH: %d" % self.players['player_one'].health
+        self.currentstatus_elements['health'] = self.game_context.text.get_textsprite(text)
 
     def level_update(self, room):
         room_elements, mobs = room.update()
         self.elements.add(room_elements.sprites(), layer=1)
         self.elements.remove_sprites_of_layer(3)
+        text = "HEALTH: %d" % self.players['player_one'].health
+        self.currentstatus_elements['health'].set_text(text)
+        self.elements.add(self.currentstatus_elements['health'])
         for mob in mobs:
             self.elements.add(mob.sprites())
         for player in self.players.values():

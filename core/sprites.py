@@ -57,7 +57,7 @@ class StaticSprite(pygame.sprite.Sprite):
         self.active_collisions = pygame.sprite.OrderedUpdates()
         self.collision_points = {}
         self.handled_collisions = pygame.sprite.OrderedUpdates()
-        self.full_screen = False
+        self.shape = "rect"
         self.immutable = initdata.get("immutable", False)
         self.destroyed = False
         self.clock = game_context.clock
