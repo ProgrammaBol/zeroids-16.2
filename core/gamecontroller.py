@@ -52,6 +52,7 @@ class GameController(object):
         self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_RIGHT,  self.players["player_one"].keyrelease_right)
         self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_UP,  self.players["player_one"].keypress_up)
         self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_UP,  self.players["player_one"].keyrelease_up)
+        self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_DOWN,  self.players["player_one"].keyrelease_down)
         self.event_queue.subscribe("keyboard", pygame.KEYDOWN, pygame.K_SPACE,  self.players["player_one"].keypress_space)
         self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_SPACE,  self.players["player_one"].keyrelease_space)
 

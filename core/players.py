@@ -1,4 +1,5 @@
 import pygame
+import random
 
 from weapons import Gun
 
@@ -57,6 +58,15 @@ class AlloyShip(MovingSprite):
             if self.parent.health <= 0:
                 self.explode()
 
+    def teleport(self):
+        print "teleport"
+        a = self.game_context.resolution[0] - self.centerx
+        b = self.game_context.resolution[1] - self.centery
+        self.centerx = random.randint(int(a-100), int(a))
+        self.centery = random.randint(int(b-100), int(b))
+        self.rect.centerx = self.centerx
+        self.rect.centery = self.centery
+
     def update(self):
         if self.status == "exploding":
             try:
@@ -92,6 +102,9 @@ class Player(pygame.sprite.Group):
 
     def stop_shooting(self):
         pass
+
+    def keyrelease_down(self):
+        self.main_sprite.teleport()
 
     def keypress_left(self):
         self.main_sprite.rotate_left()

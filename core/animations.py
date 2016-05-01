@@ -11,6 +11,7 @@ class Animation(object):
         self.playback_position = 0
         self.clock = game_context.clock
         self.nextframe_countdown = 0
+        self.sound_played = False
 
     def add_sequence(self, sequence, total_duration, equal_time=False, defs=True):
         # TYPE can be costumes or blitover
@@ -35,7 +36,8 @@ class Animation(object):
         self.sequence[costume_name] = duration_msec
 
     def update(self):
-        if self.playback_position == 0 and self.sound is not None:
+        if self.sound is not None and not self.sound_played:
+            self.sound_played = True
             self.game_context.sounds.single_play(self.sound)
         costume_name = "animation-%s-%s" % (self.name, self.playback_position)
         self.sprite.change_active_costume(costume_name)
