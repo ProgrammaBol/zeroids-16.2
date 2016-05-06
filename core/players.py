@@ -59,11 +59,10 @@ class AlloyShip(MovingSprite):
                 self.explode()
 
     def teleport(self):
-        print "teleport"
         a = self.game_context.resolution[0] - self.centerx
         b = self.game_context.resolution[1] - self.centery
-        self.centerx = random.randint(int(a-100), int(a))
-        self.centery = random.randint(int(b-100), int(b))
+        self.centerx = random.randint(int(a-100), int(a+100))
+        self.centery = random.randint(int(b-100), int(b+100))
         self.rect.centerx = self.centerx
         self.rect.centery = self.centery
 

@@ -27,21 +27,6 @@ class GameController(object):
     def next_level(self):
         self.status = "level-init"
 
-    def load_map(self, levelid):
-        pass
-        # load map file(levelid)
-
-        # Mobs
-        # ufo
-        #initdata = {}
-        #initdata['targets'] = [self.players["player_one"].main_sprite]
-        #room.add_mob(Ufo, initdata=initdata, random_ranges=random_ranges)
-        # staring_room.loadtiles()
-        # turret
-        #random_ranges['position_type'] = "inmap"
-        #room.add_mob(Turret, initdata=initdata, random_ranges=random_ranges)
-
-
     def toggle_pause(self):
         self.pause = not self.pause
 
@@ -106,6 +91,7 @@ class GameController(object):
     def menu_shutdown(self):
         self.event_queue.unsubscribe("keyboard", pygame.KEYUP, pygame.K_SPACE)
         self.currentstatus_elements['startbutton'].destroyed = True
+        self.currentstatus_elements['title'].destroyed = True
 
     def menu_startgame(self):
         self.menu_shutdown()
@@ -114,10 +100,13 @@ class GameController(object):
     def menu_init(self):
         self.event_queue.subscribe("keyboard", pygame.KEYUP, pygame.K_SPACE, self.menu_startgame)
         text = "Press space to start"
-        self.currentstatus_elements['startbutton'] = self.game_context.text.get_textsprite(text, style="title")
+        self.currentstatus_elements['startbutton'] = self.game_context.text.get_textsprite(text, style="subtitle")
+        titletext = "Zeroids"
+        self.currentstatus_elements['title'] = self.game_context.text.get_textsprite(titletext, style="title", color=(255,100,0))
 
     def menu_update(self):
         self.elements.add(self.currentstatus_elements['startbutton'])
+        self.elements.add(self.currentstatus_elements['title'])
 
     def intralevel_init(self, room):
         text = room.name

@@ -1,9 +1,11 @@
 import pygame
 import os
+import intro.sigla as sigla
 
 from datastructures import EventQueue, GameContext
 from gamecontroller import GameController
 from colorlog import log
+
 
 tilemap = dict()
 
@@ -34,6 +36,14 @@ def main():
     loop = True
     clock.tick(max_fps)
     clock.tick(max_fps)
+
+    # intro module
+    sigla.intro_title(screen, game_context)
+    pygame.time.wait(500)
+    sigla.fade_to_black(resolution, screen)
+    sigla.personaggi_entrano_in_scena(screen, game_context)
+    sigla.fade_to_black(resolution, screen)
+
     while loop:
         loop = main_event_queue.handle_events()
         background_change, background, screen_elements = game_controller.update()
