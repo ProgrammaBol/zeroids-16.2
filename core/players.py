@@ -54,7 +54,7 @@ class AlloyShip(MovingSprite):
 
     def handle_collision(self, sprite):
         if sprite.parent is not self.parent:
-            self.parent.health -= 1
+            self.parent.health -= 20
             if self.parent.health <= 0:
                 self.explode()
 

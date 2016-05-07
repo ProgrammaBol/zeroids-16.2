@@ -36,8 +36,7 @@ class LaserTurret(MovingSprite):
         time = self.clock.get_time()
         self.ai_countdown -= time
         if self.ai_countdown <= 0:
-            #fire = random.choice([0,1])
-            fire = True
+            fire = random.choice([0,1])
             if fire:
                 self.parent.shoot()
             self.ai_countdown = self.ai_eval_time

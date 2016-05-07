@@ -181,6 +181,17 @@ class GameController(object):
         for sprite in self.elements.sprites():
             if getattr(sprite, "destroyed", False):
                 sprite.kill()
+                try:
+                    sprite.active_collisions.empty()
+                    sprite.handled_collisions.empty()
+                except AttributeError, e:
+                    print e
+                    pass
+
+                try:
+                    sprite.parent.remove(sprite)
+                except (TypeError,AttributeError):
+                    pass
 
         self.elements.update()
 

@@ -239,29 +239,29 @@ class MovingSprite(StaticSprite):
 
     def update(self):
         # borders
-        if self.centerx > self.resolutionx and self.direction in range(1,179):
-            if self.border_action == "roundribbon":
+        if self.centerx > self.resolutionx:
+            if self.border_action == "roundribbon" and self.direction >= 1 and self.direction <= 179:
                 self.centerx = -self.rect.width
             elif self.border_action == "destroy":
                 self.destroyed = True
             elif self.border_action == "bounce":
                 self.change_direction(- self.direction % 360)
-        elif self.centerx < 0 and self.direction in range(181,359):
-            if self.border_action == "roundribbon":
+        elif self.centerx < 0:
+            if self.border_action == "roundribbon" and self.direction >= 181 and self.direction <=359:
                 self.centerx = self.resolutionx
             elif self.border_action == "destroy":
                 self.destroyed = True
             elif self.border_action == "bounce":
                 self.change_direction(- self.direction % 360)
-        if self.centery > self.resolutiony and self.direction in range(91, 269):
-            if self.border_action == "roundribbon":
+        if self.centery > self.resolutiony:
+            if self.border_action == "roundribbon" and self.direction >= 91 and self.direction <= 269:
                 self.centery = -self.rect.height
             elif self.border_action == "destroy":
                 self.destroyed = True
             elif self.border_action == "bounce":
                 self.change_direction((180 - self.direction) % 360)
-        elif self.centery < 0 and (self.direction in range(0,89) or self.direction in range(271,359)):
-            if self.border_action == "roundribbon":
+        elif self.centery < 0:
+            if self.border_action == "roundribbon" and ((self.direction >= 0 and self.direction <= 89) or (self.direction >= 271 and self.direction <= 359)):
                 self.centery = self.resolutiony
             elif self.border_action == "destroy":
                 self.destroyed = True
