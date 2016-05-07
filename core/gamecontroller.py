@@ -66,20 +66,21 @@ class GameController(object):
                 if collided_sprite.shape != "line" and sprite.shape != "line":
                     point = pygame.sprite.collide_mask(sprite, collided_sprite)
                 elif collided_sprite.shape == "line" and sprite.shape != "line":
-                    y = collided_sprite.m * sprite.rect.x + collided_sprite.q
+                    y = collided_sprite.m * sprite.centerx + collided_sprite.q
                     if y >= sprite.rect.y and y <= sprite.rect.y + sprite.rect.height:
                         point = pygame.sprite.collide_mask(sprite, collided_sprite)
                 elif collided_sprite.shape != "line" and sprite.shape == "line":
-                    y = sprite.m * collided_sprite.rect.x + sprite.q
+                    y = sprite.m * collided_sprite.centerx + sprite.q
                     if y >= collided_sprite.rect.y and y <= collided_sprite.rect.y + collided_sprite.rect.height:
                         point = pygame.sprite.collide_mask(sprite, collided_sprite)
                 if point:
-                    if not collided_sprite.immutable:
-                        collided_sprite.active_collisions.add(sprite)
-                        collided_sprite.collision_points[sprite] = point
                     if not sprite.immutable:
                         sprite.active_collisions.add(collided_sprite)
                         sprite.collision_points[collided_sprite] = point
+                    if not collided_sprite.immutable:
+                        point = pygame.sprite.collide_mask(collided_sprite, sprite)
+                        collided_sprite.active_collisions.add(sprite)
+                        collided_sprite.collision_points[sprite] = point
 
 
     def change_status(self, status):

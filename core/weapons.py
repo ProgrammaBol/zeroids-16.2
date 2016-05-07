@@ -1,6 +1,4 @@
 import pygame
-import math
-import time
 from sprites import MovingSprite, StaticSprite
 from animations import Animation
 from exceptions import AnimationEnded
@@ -67,112 +65,81 @@ class Laser(StaticSprite):
         self.parent_class = None
         self.game_context = game_context
         self.animations = {}
+        self.target = initdata['target']
         initdata['immutable'] = False
-        self.target = initdata.get('target', None)
+        self.m = initdata.get('m', 0)
+        self.q = initdata.get('q', 0)
         self.collision_entity = "salve"
-        #self.angle = initdata['angle']
-        # find angle
-        distancex = self.parent.centerx - self.target[0]
-        distancey = self.parent.centery - self.target[1]
-        self.ray_angle = (math.degrees(math.atan2(distancey, distancex))- 90) % 360
-        m = distancey/distancex
-        q = self.parent.centery - m * self.parent.centerx
-        # find angle intervals
-        distancex = self.parent.centerx
-        distancey = self.parent.centery
-        topleft = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
-        distancex = self.parent.centerx
-        distancey = self.parent.centery - game_context.resolution[1]
-        bottomleft = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
-        distancex = self.parent.centerx - game_context.resolution[0]
-        distancey = self.parent.centery
-        topright = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
-        distancex = self.parent.centerx - game_context.resolution[0]
-        distancey = self.parent.centery - game_context.resolution[1]
-        bottomright = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
-        if self.ray_angle >= topleft or (self.ray_angle > 0 and self.ray_angle < topright):
-            y = 0
-            x = (y - q)/m
-        if self.ray_angle >= topright and self.ray_angle < bottomright:
-            x = game_context.resolution[0]
-            y = m * x + q
-        if self.ray_angle >= bottomright and self.ray_angle < bottomleft:
-            y = game_context.resolution[1]
-            x = (y - q)/m
-        if self.ray_angle >= bottomleft and self.ray_angle < topleft:
-            x = 0
-            y = m * x + q
-        self.m = m
-        self.q = q
-        self.ray_x = x
-        self.ray_y = y
-        if self.ray_x > self.parent.centerx:
-            posx = self.parent.centerx
-        else:
-            posx = self.ray_x
-        width = abs(self.ray_x - self.parent.centerx)
-        if self.ray_y > self.parent.centery:
-            posy = self.parent.centery
-            height = self.ray_y - self.parent.centery
-        else:
-            posy = self.ray_y
-            height = self.parent.centery - self.ray_y
-        initdata['centerx'] = posx + width/2
-        initdata['centery'] = posy + height/2
+        self.ray_x = initdata.get('borderx', 0)
+        self.ray_y = initdata.get('bordery', 0)
+        self.hit = False
+        initdata['angle'] = None
         self.ray_duration = 500
-        self.costumes["default"] = pygame.Surface((width,height))
+        initdata['centerx'] = game_context.resolution[0]/2
+        initdata['centery'] = game_context.resolution[1]/2
+        self.costumes["default"] = pygame.Surface((game_context.resolution[0], game_context.resolution[1]))
         self.costumes['default'].set_alpha(0)
         super(Laser, self).__init__(game_context, initdata=initdata, *group)
         self.shape = "line"
         self.costumes['default'].set_colorkey((0,0,0))
-        self.animations["ray"] = Animation(game_context, self, "ray")
-        widths = range(1,6) + range(6,0,-1)
+        self.prepare_animation()
+
+    def prepare_animation(self, hit=False):
+        rangestart = 1
+        if hit:
+            rangestart += 1
+            self.animations["ray"].count=1
+        else:
+            self.animations["ray"] = Animation(self.game_context, self, "ray")
+        widths = range(rangestart,6) + range(6,0,-1)
         radiuses = range(1,8)
         frame_duration = self.ray_duration/(len(widths) + len(radiuses))
         for radius in radiuses:
             image = self.costumes['default'].copy()
             image.set_alpha(127)
             pygame.draw.circle(image, (255,255,255), (self.parent.rect.centerx, self.parent.rect.centery), radius)
-            self.animations['ray'].add_frame(image, duration_msec=frame_duration, defs=False)
+            self.animations['ray'].append_frame(image, duration_msec=frame_duration, defs=False)
         for ray_width in widths:
             image = self.costumes['default'].copy()
             if ray_width == 1:
                 image.set_alpha(0)
             else:
                 image.set_alpha(127)
-            if m > 0:
-                pygame.draw.line(image, (255,255,255), (0,0), (width,height), ray_width)
-            else:
-                pygame.draw.line(image, (255,255,255), (0,height), (width,0), ray_width)
+            pygame.draw.line(image, (255,255,255), (self.parent.rect.centerx,self.parent.rect.centery), (self.ray_x, self.ray_y), ray_width)
+            if hit:
+                pygame.draw.circle(image, (255,255,255), (self.ray_x, self.ray_y), 8)
 
-            self.animations['ray'].add_frame(image, duration_msec=frame_duration, defs=False)
+            self.animations['ray'].append_frame(image, duration_msec=frame_duration, defs=False)
         self.change_active_costume('default')
 
-
-    def good_hit(self, sprite):
+    def good_hit(self):
         # accorcia il laser fino al primo sprite colpito
-        self.ray_x = self.collision_points[sprite][0]
-        self.ray_y = self.collision_points[sprite][1]
+        self.prepare_animation(hit=True)
+
+    def nada(self):
         self.animations["ray"] = Animation(self.game_context, self, "ray")
-        widths = range(1,6) + range(6,0,-1)
+        widths = range(2,6) + range(6,0,-1)
         radiuses = range(1,8)
         frame_duration = self.ray_duration/(len(widths) + len(radiuses))
         for radius in radiuses:
             image = self.costumes['default'].copy()
             image.set_alpha(127)
-            pygame.draw.circle(image, (255,255,255), (self.parent.rect.centerx, self.parent.rect.centery), radius)
+            pygame.draw.circle(image, (255,255,255), (self.ray_sourcex, self.parent.rect.centery), radius)
         for width in widths:
             image = self.costumes['default'].copy()
             image.set_alpha(127)
-            pygame.draw.line(image, (255,255,255), (self.parent.centerx,self.parent.centery), (self.ray_x,self.ray_y), width)
-            pygame.draw.circle(image, (255,255,255), (self.ray_x, self.ray_y), 8)
+            pygame.draw.line(image, (255,255,255), (self.parent.rect.centerx,self.parent.rect.centery), (self.ray_x,self.ray_y), width)
             self.animations['ray'].add_frame(image, duration_msec=frame_duration, defs=False)
         self.change_active_costume('default')
 
     def handle_collision(self, sprite):
         if sprite is not self.parent and sprite.collision_entity is not "text":
             #trova lo sprite piu' vicino
-            self.good_hit(sprite)
+            self.ray_x = self.rect.x + self.collision_points[sprite][0]
+            self.ray_y = self.rect.y + self.collision_points[sprite][1]
+            if self.hit == False:
+                self.hit = True
+                self.good_hit()
 
     def update(self):
         super(Laser, self).update()

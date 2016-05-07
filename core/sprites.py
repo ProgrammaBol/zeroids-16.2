@@ -46,12 +46,17 @@ class StaticSprite(pygame.sprite.Sprite):
         super(StaticSprite, self).__init__(*group)
         self.game_context = game_context
         self.random_position(random_ranges)
-        self.centerx = initdata.get('centerx', self.centerx)
-        self.centery = initdata.get('centery', self.centery)
+        self.rect = initdata.get('rect', None)
+        if self.rect is not None:
+            self.centerx = self.rect.centerx
+            self.centery = self.rect.centery
+        else:
+            self.centerx = initdata.get('centerx', self.centerx)
+            self.centery = initdata.get('centery', self.centery)
         self.visible = False
         self.masks = dict()
         self.active_costume_name = "default"
-        self.angle = 0
+        self.angle = initdata.get('angle', 0)
         self.active_collisions = pygame.sprite.OrderedUpdates()
         self.collision_points = {}
         self.handled_collisions = pygame.sprite.OrderedUpdates()
@@ -105,10 +110,11 @@ class StaticSprite(pygame.sprite.Sprite):
         #self.mask = self.masks[costume_name]
 
     def rotate(self):
-        center = self.rect.center
-        self.image = pygame.transform.rotate(self.costumes[self.active_costume_name],  - self.angle)
-        self.rect.size = self.image.get_rect().size
-        self.rect.center = center
+        if self.angle is not None:
+            center = self.rect.center
+            self.image = pygame.transform.rotate(self.costumes[self.active_costume_name],  - self.angle)
+            self.rect.size = self.image.get_rect().size
+            self.rect.center = center
 
     def update(self):
         self.image = self.costumes[self.active_costume_name]

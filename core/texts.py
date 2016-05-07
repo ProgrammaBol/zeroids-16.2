@@ -18,7 +18,9 @@ class TextSprite(pygame.sprite.Sprite):
         self.collision_entity = "text"
         self.color = color
         self.set_text(self.text, color=color)
-        self.shape = "rect"
+        self.centerx = self.rect.centerx
+        self.centery = self.rect.centery
+        self.shape = "text"
         self.immutable = True
         self.parent = None
 

@@ -12,6 +12,7 @@ class Animation(object):
         self.clock = game_context.clock
         self.nextframe_countdown = 0
         self.sound_played = False
+        self.count = 0
 
     def add_sequence(self, sequence, total_duration, equal_time=False, defs=True):
         # TYPE can be costumes or blitover
@@ -22,18 +23,22 @@ class Animation(object):
             else:
                 frame_image = frame[0]
                 frame_duration = frame[1]
-            self.add_frame(frame_image, duration_msec=frame_duration, defs=defs)
+            self.append_frame(frame_image, duration_msec=frame_duration, defs=defs)
 
-    def add_frame(self, frame, duration_msec=0, defs=True):
-        count = len(self.sequence)
-        if count == 1:
+    def append_frame(self, frame, duration_msec=0, defs=True):
+        self.set_frame(self.count, frame, duration_msec=duration_msec, defs=defs)
+        self.count += 1
+
+    def set_frame(self, number, frame, duration_msec=0, defs=True):
+        if number == 1:
             self.nextframe_countdown = duration_msec
-        costume_name = "animation-%s-%s" % (self.name, count)
+        costume_name = "animation-%s-%s" % (self.name, number)
         if defs:
             self.sprite.costumes_defs[costume_name] = frame
         else:
             self.sprite.costumes[costume_name] = frame
         self.sequence[costume_name] = duration_msec
+
 
     def update(self):
         if self.sound is not None and not self.sound_played:

@@ -76,8 +76,43 @@ class Turret(pygame.sprite.Group):
         self.targets = initdata['targets']
 
     def shoot(self):
+        target = (self.targets[0].centerx, self.targets[0].centery)
+        distancex = float(self.main_sprite.centerx - target[0])
+        distancey = float(self.main_sprite.centery - target[1])
+        self.ray_angle = (math.degrees(math.atan2(distancey, distancex))- 90) % 360
+        m = distancey/distancex
+        q = self.main_sprite.centery - m * self.main_sprite.centerx
+        # find angle intervals
+        distancex = self.main_sprite.centerx
+        distancey = self.main_sprite.centery
+        topleft = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
+        distancex = self.main_sprite.centerx
+        distancey = self.main_sprite.centery - self.game_context.resolution[1]
+        bottomleft = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
+        distancex = self.main_sprite.centerx - self.game_context.resolution[0]
+        distancey = self.main_sprite.centery
+        topright = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
+        distancex = self.main_sprite.centerx - self.game_context.resolution[0]
+        distancey = self.main_sprite.centery - self.game_context.resolution[1]
+        bottomright = (math.degrees(math.atan2(distancey, distancex)) - 90) % 360
+        if self.ray_angle >= topleft or (self.ray_angle > 0 and self.ray_angle < topright):
+            y = 0
+            x = (y - q)/m
+        elif self.ray_angle >= topright and self.ray_angle < bottomright:
+            x = self.game_context.resolution[0]
+            y = m * x + q
+        elif self.ray_angle >= bottomright and self.ray_angle < bottomleft:
+            y = self.game_context.resolution[1]
+            x = (y - q)/m
+        elif self.ray_angle >= bottomleft and self.ray_angle < topleft:
+            x = 0
+            y = m * x + q
         initdata = {}
-        initdata['target'] = (self.targets[0].centerx, self.targets[0].centery)
+        initdata['m'] = m
+        initdata['q'] = q
+        initdata['borderx'] = x
+        initdata['bordery'] = y
+        initdata['target'] = target
         ammo_sprite = self.spriteslib.get_sprite(self.current_weapon.ammo_class, self.game_context, parent=self.main_sprite, initdata=initdata)
         self.soundslib.single_play(self.current_weapon.soundname)
         self.add(ammo_sprite)
