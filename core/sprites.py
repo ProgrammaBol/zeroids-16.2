@@ -215,29 +215,6 @@ class MovingSprite(StaticSprite):
         self.centerx = self.centerx + increment_perframe
         increment_perframe = float(frame_msec * self.speed_y) / 1000
         self.centery = self.centery + increment_perframe
-        self.rect.centerx = self.centerx
-        self.rect.centery = self.centery
-
-    def apply_gravity(self):
-        pass
-
-    def change_direction(self, direction):
-        self.direction = direction
-        if self.angle_is_direction:
-            self.angle = direction
-        current_speed = self.speed
-        x_component = round(math.sin(math.radians(self.direction)), 8)
-        y_component = round((-math.cos(math.radians(self.direction))), 8)
-        self.speed_x = current_speed * x_component
-        self.speed_y = current_speed * y_component
-
-    def change_speed(self, speed):
-        x_component = round(math.sin(math.radians(self.direction)), 8)
-        y_component = round((-math.cos(math.radians(self.direction))), 8)
-        self.speed_x = speed * x_component
-        self.speed_y = speed * y_component
-
-    def update(self):
         # borders
         if self.centerx > self.resolutionx:
             if self.border_action == "roundribbon" and self.direction >= 1 and self.direction <= 179:
@@ -267,6 +244,29 @@ class MovingSprite(StaticSprite):
                 self.destroyed = True
             elif self.border_action == "bounce":
                 self.change_direction((180 - self.direction) % 360)
+        self.rect.centerx = self.centerx
+        self.rect.centery = self.centery
+
+    def apply_gravity(self):
+        pass
+
+    def change_direction(self, direction):
+        self.direction = direction
+        if self.angle_is_direction:
+            self.angle = direction
+        current_speed = self.speed
+        x_component = round(math.sin(math.radians(self.direction)), 8)
+        y_component = round((-math.cos(math.radians(self.direction))), 8)
+        self.speed_x = current_speed * x_component
+        self.speed_y = current_speed * y_component
+
+    def change_speed(self, speed):
+        x_component = round(math.sin(math.radians(self.direction)), 8)
+        y_component = round((-math.cos(math.radians(self.direction))), 8)
+        self.speed_x = speed * x_component
+        self.speed_y = speed * y_component
+
+    def update(self):
         if self.angular_speed != 0:
             self.spin()
         super(MovingSprite, self).update()
